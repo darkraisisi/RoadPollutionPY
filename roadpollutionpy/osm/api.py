@@ -3,6 +3,7 @@ import json
 import overpass as op
 # import multiprocessing as mp
 import concurrent.futures
+import time 
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -33,23 +34,21 @@ def readFromFile(name:str) -> pd.DataFrame:
 
 
 def normalizeDataframe(df,cols,verbose=False):
+    print(verbose)
+    toRm = []
+    for dfCol in df.columns: 
+        if(dfCol not in cols):
+            toRm.append(dfCol)
+
     if verbose:
         getDataframeTotalSize(df)
+        startTime = time.time()
 
-    # processes = []
-    for item in df.iteritems():
-        print(item[0] not in cols)
-        if(item[0] not in cols):
-            df.drop(item[0], axis=1, inplace=True)
-            # p = mp.Process(target=dropCol,args=(item[0]))
-            # p.start()
-            # processes.append(p)
-
-    # for p in processes:
-    #     p.join()
-        
+    df.drop(toRm, axis=1, inplace=True)
+    df = df.loc[~df.index.duplicated(keep='first')]
     if verbose:
         getDataframeTotalSize(df)
+        print(f'normalizing took {time.time() - startTime} seconds')
 
 
 def dropCol(df,colName):
@@ -71,16 +70,8 @@ mapName, name = ["utrechtSurWays_way","utrechtSur"]
 # mapName, name = ["utrechtProvWays_way","utrechtProv"]
 
 print(mapName,name)
-res = getWayFromCoordinates(con.osm["coordinates"][name])
-writeToFile(mapName,res)
-
-
-# test draw nodes
-# data = readFromFile(mapName)
-# print(data.head)
-# data.plot(kind='scatter',x='lon',y='lat',color='red')
-# plt.show()
-
+# res = getWayFromCoordinates(con.osm["coordinates"][name])
+# writeToFile(mapName,res)
 
 # normalize
 cols = ['type', 'id', 'lat', 'lon', 'nodes', 'tags.name', 'tags.highway', 'tags.maxspeed', 'tags.surface']

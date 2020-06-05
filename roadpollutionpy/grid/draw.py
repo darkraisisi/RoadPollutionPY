@@ -18,7 +18,9 @@ mapName, name = ["baarnWays_way","baarn"]
 
 def readFromFile(name:str) -> pd.DataFrame:
     print(path+name+extension)
-    return pd.json_normalize(pd.read_json(path+name+extension,typ='series', dtype=object))
+    df = pd.json_normalize(pd.read_json(path+name+extension,typ='series', dtype=object))
+    df.set_index('id')
+    return df
 
 
 def calculateDistance(lat1, lat2, lon1, lon2):
@@ -27,7 +29,7 @@ def calculateDistance(lat1, lat2, lon1, lon2):
     return 12742 * math.asin(math.sqrt(a))
 
 
-def drawScatterPlotFrom(data:pd.DataFrame) -> None:
+def drawPlot(data:pd.DataFrame,roads=None) -> None:
     # data.plot(kind='scatter',x='lon',y='lat',color='red')
     lon_min = min(data['lon'])
     lon_max = max(data['lon'])
@@ -44,24 +46,31 @@ def drawScatterPlotFrom(data:pd.DataFrame) -> None:
     print(lonInKm)
     print(latInKm)
 
+    matrix = np.zeros((math.ceil(((lat_max - lat_min)*1000)/latInKm),math.ceil(((lon_max - lon_min)*1000)/lonInKm)))
+    print(matrix.shape)
+    print(matrix)
     startTime = time.time()
-    for node in data.itertuples():
-        if(node[1] =='way'):
+    i=0
+    if(roads):
+        print("roads",roads)
+        for node in data.loc[(data['tags.highway'].isin(roads))].itertuples():
+            print(node.nodes)
+            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            plt.plot(out.lon,out.lat,color='green')
+            i+=1
+    else:
+        print("no roads",roads)
+        for node in data.loc[(data['type'] == 'way')].itertuples():
+            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            plt.plot(out.lon,out.lat,color='green')
+            i+=1
 
-            lon = []
-            lat = []
-            for roadPiece in node.nodes:
-                # print(node)
-                # print(data.loc[(data['id'] == roadPiece) & (data['type'] == 'node')])
-                # _,_,_,lat,lon,_,_,_,_,_ = data.loc[(data['id'] == roadPiece) & (data['type'] == 'node')]
-                out = data.loc[(data['id'] == roadPiece) & (data['type'] == 'node')]
-                lon.append(float(out['lon']))
-                lat.append(float(out['lat']))
-
-            plt.plot(lon,lat,color='green')
-    print(f'elapsed time to looop through connected way nodes{time.time() - startTime}')
+    print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
     plt.show()
 
 
 data = readFromFile(mapName)
-drawScatterPlotFrom(data)
+# rds = ['motorway_link','primary','secondary','tertiary']
+# rds = ['motorway_link','primary','secondary','tertiary','residential','service']
+# drawPlot(data,rds)
+drawPlot(data)
