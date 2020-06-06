@@ -34,7 +34,6 @@ def readFromFile(name:str) -> pd.DataFrame:
 
 
 def normalizeDataframe(df,cols,verbose=False):
-    print(verbose)
     toRm = []
     for dfCol in df.columns: 
         if(dfCol not in cols):
@@ -45,7 +44,9 @@ def normalizeDataframe(df,cols,verbose=False):
         startTime = time.time()
 
     df.drop(toRm, axis=1, inplace=True)
-    df = df.loc[~df.index.duplicated(keep='first')]
+    df.set_index('id')
+    df = df.drop_duplicates('id',keep='first')
+
     if verbose:
         getDataframeTotalSize(df)
         print(f'normalizing took {time.time() - startTime} seconds')

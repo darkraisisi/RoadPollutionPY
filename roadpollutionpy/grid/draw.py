@@ -49,23 +49,23 @@ def drawPlot(data:pd.DataFrame,roads=None) -> None:
     matrix = np.zeros((math.ceil(((lat_max - lat_min)*1000)/latInKm),math.ceil(((lon_max - lon_min)*1000)/lonInKm)))
     print(matrix.shape)
     print(matrix)
+    data = data.drop_duplicates('id',keep='first')
     startTime = time.time()
     i=0
     if(roads):
-        print("roads",roads)
         for node in data.loc[(data['tags.highway'].isin(roads))].itertuples():
-            print(node.nodes)
             out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
             plt.plot(out.lon,out.lat,color='green')
             i+=1
     else:
-        print("no roads",roads)
         for node in data.loc[(data['type'] == 'way')].itertuples():
             out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
             plt.plot(out.lon,out.lat,color='green')
             i+=1
 
     print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
+    plt.xlabel('longitude')
+    plt.ylabel('latitude')
     plt.show()
 
 
