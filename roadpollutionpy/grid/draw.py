@@ -5,6 +5,7 @@ import math
 import time 
 import numpy as np
 import concurrent.futures
+import poll as pl
 
 path = "maps/norm/"
 extension = ".json"
@@ -23,34 +24,12 @@ def readFromFile(name:str) -> pd.DataFrame:
     return df
 
 
-def calculateDistance(lat1, lat2, lon1, lon2):
-    p = math.pi/180
-    a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p) * math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p))/2
-    return 12742 * math.asin(math.sqrt(a))
-
-
-def drawPlot(data:pd.DataFrame,roads=None) -> None:
+def drawPlot(data:pd.DataFrame,roads:list=None) -> None:
     # data.plot(kind='scatter',x='lon',y='lat',color='red')
-    lon_min = min(data['lon'])
-    lon_max = max(data['lon'])
-    lat_min = min(data['lat'])
-    lat_max = max(data['lat'])
 
-    lonInKm = calculateDistance(lat_min,lat_min,lon_min,lon_max)
-    latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
-
-    print(math.gcd(int(lonInKm*1000),int(latInKm*1000)))
-    print(((lon_max - lon_min)*1000),((lat_max - lat_min)*1000))
-    print(((lon_max - lon_min)*1000)/lonInKm,((lat_max - lat_min)*1000)/latInKm)
-    print(lon_min,lon_max,lat_min,lat_max)
-    print(lonInKm)
-    print(latInKm)
-
-    matrix = np.zeros((math.ceil(((lat_max - lat_min)*1000)/latInKm),math.ceil(((lon_max - lon_min)*1000)/lonInKm)))
-    print(matrix.shape)
-    print(matrix)
-    data = data.drop_duplicates('id',keep='first')
     startTime = time.time()
+    data = data.drop_duplicates('id',keep='first')
+    
     i=0
     if(roads):
         for node in data.loc[(data['tags.highway'].isin(roads))].itertuples():
@@ -58,8 +37,11 @@ def drawPlot(data:pd.DataFrame,roads=None) -> None:
             plt.plot(out.lon,out.lat,color='green')
             i+=1
     else:
+        # Go through all ways
         for node in data.loc[(data['type'] == 'way')].itertuples():
+            # Get the current way and look at the nodes that mare the road and get a list returned based on the id's
             out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            # plot the two lists of longitude and latitude lines
             plt.plot(out.lon,out.lat,color='green')
             i+=1
 
@@ -70,7 +52,9 @@ def drawPlot(data:pd.DataFrame,roads=None) -> None:
 
 
 data = readFromFile(mapName)
+rds = None
 # rds = ['motorway_link','primary','secondary','tertiary']
 # rds = ['motorway_link','primary','secondary','tertiary','residential','service']
 # drawPlot(data,rds)
+pl.calc(data,rds)
 drawPlot(data)
