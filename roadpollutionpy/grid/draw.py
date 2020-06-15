@@ -46,6 +46,9 @@ def drawPlot(data:pd.DataFrame,roads:list=None) -> None:
             i+=1
 
     print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
+    # matrix = pl.calc(data,roads)
+    # plt.imshow(matrix, cmap='hot', interpolation='nearest')
+    # plt.colorbar()
     plt.xlabel('longitude')
     plt.ylabel('latitude')
     plt.show()
@@ -56,5 +59,11 @@ rds = None
 # rds = ['motorway_link','primary','secondary','tertiary']
 # rds = ['motorway_link','primary','secondary','tertiary','residential','service']
 # drawPlot(data,rds)
-pl.calc(data,rds)
-drawPlot(data)
+# drawPlot(data)
+
+matrix = pl.calc(data,rds)
+plt.imshow(matrix, cmap='hot', interpolation='quadric')
+plt.colorbar()
+plt.xlabel('longitude')
+plt.ylabel('latitude')
+plt.show()
