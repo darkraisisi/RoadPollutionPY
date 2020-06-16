@@ -49,8 +49,8 @@ def concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,theta,downWindDistance):
     u1 = limit(Xr,Yr,X1,Y1,theta)
     u2 = limit(Xr,Yr,X2,Y2,theta)
     # x = downwind distance from the source to the receptor
-    sigZ = calcSigZ(downWindDistance)
-    sigY = calcSigY(downWindDistance)
+    # sigZ = calcSigZ(downWindDistance)
+    # sigY = calcSigY(downWindDistance)
     return ((Q / math.sqrt(2*math.pi)) * 
     (1 / (U*math.cos(theta)*sigZ)) *
     (math.erf(u1)-math.erf(u2)))
@@ -67,11 +67,19 @@ def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
     plt.plot(x,y)
     plt.show()
 
+
 def calculateDistance(lat1, lat2, lon1, lon2):
     p = math.pi/180
     a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p) * math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p))/2
     return 12742 * math.asin(math.sqrt(a))
 
+
+def getMinMaxDataframe(df:pd.DataFrame) -> tuple:
+    return (min(df['lon']),
+    max(df['lon']),
+    min(df['lat']),
+    max(df['lat']))
+    
 
 def getBounds(matrixShape,lon_min,lon_max,lat_min,lat_max):
     print(matrixShape)
@@ -98,12 +106,9 @@ def getBounds(matrixShape,lon_min,lon_max,lat_min,lat_max):
     return bounds
 
 
-def calc(df:pd.DataFrame,roads:list = None) -> np.array:
+def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     startTime = time.time()
-    lon_min = min(df['lon'])
-    lon_max = max(df['lon'])
-    lat_min = min(df['lat'])
-    lat_max = max(df['lat'])
+    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
 
     print(lat_min,lat_min,lon_min,lon_max)
 
@@ -111,8 +116,8 @@ def calc(df:pd.DataFrame,roads:list = None) -> np.array:
     latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
 
     matrix = np.zeros(
-    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*3),
-    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*3 )))
+    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
+    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
 
     print(matrix)
 
@@ -120,6 +125,7 @@ def calc(df:pd.DataFrame,roads:list = None) -> np.array:
     print(bounds.shape)
     # print(getNodesInBounds(df,bounds[4][7]))
     waysDf = df.loc[(df['type'] == 'way')]
+    lookUp = generateLookup(df)
     i = 0
     # go through the different bounds
     for rowIndex in range(0, len(bounds)):
@@ -128,21 +134,26 @@ def calc(df:pd.DataFrame,roads:list = None) -> np.array:
             # get all the nodes that are in the current bound
             nodesInBound = getNodesInBounds(df,bounds[rowIndex][columIndex])
             # get all the wayNodes that have one more nodes that are in the current bound
-            _set = set(nodesInBound['id'])
-            ways = waysDf.loc[ ~waysDf['nodes'].map(_set.isdisjoint)]
-            # go through all the individual ways in in this bound and intersect the way that is in this bound so no connection is calculated multiple times
-            for way in ways.nodes:
-                intersections = list(_set.intersection(way))
-                for wayIndex in range(0,len(intersections)-1):
-                    currNode, nextNode = nodesInBound.loc[nodesInBound.id == intersections[wayIndex]] , nodesInBound.loc[nodesInBound.id == intersections[wayIndex+1]]
-                    lineLength = calculateDistance(float(currNode.lat),float(nextNode.lat),float(currNode.lon),float(nextNode.lon))
-                    ret = concentration(Q,U,centerLon,centerLat,currNode.lon,currNode.lat,nextNode.lon,nextNode.lat,theta,(lineLength/3))
-                    matrix[rowIndex][columIndex] += ret
+            currentWaysId = []
+            if nodesInBound.size != 0:
+                for nodeInBound in nodesInBound.id:
+                    for wayId in lookUp[nodeInBound]:
+                        currentWaysId.append(wayId)
+                
+                nodesSet = set(nodesInBound['id'])
+                ways = waysDf.loc[(waysDf['id'].isin(currentWaysId))]
+                for way in ways.nodes:
+                    intersections = list(nodesSet.intersection(way))
+                    for wayIndex in range(0,len(intersections)-1):
+                        currNode, nextNode = nodesInBound.loc[nodesInBound.id == intersections[wayIndex]] , nodesInBound.loc[nodesInBound.id == intersections[wayIndex+1]]
+                        lineLength = calculateDistance(float(currNode.lat),float(nextNode.lat),float(currNode.lon),float(nextNode.lon))
+                        ret = concentration(Q,U,centerLon,centerLat,currNode.lon,currNode.lat,nextNode.lon,nextNode.lat,theta,(lineLength/4))
+                        matrix[rowIndex][columIndex] += ret
 
-            # print(f'Amount of bounds calculated:{i}')
-            i+=1
+                print(f'Amount of bounds calculated:{i}')
+                i+=1
 
-    # print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
+    print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
     return matrix
 
 
@@ -153,6 +164,22 @@ def getNodesInBounds(df:pd.DataFrame,bounds:list):
     return df.loc[(df['lat'] >= bounds[0][0]) & (df['lat'] < bounds[0][1]) &
     (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])
     ]
+
+
+def generateLookup(df:pd.DataFrame):
+    nodeLookup = {}
+    for way in df.loc[df['type'] == 'way'].itertuples():
+        for node in way.nodes:
+            if node in nodeLookup:
+                nodeLookup[node].append(way.id)
+            else:
+                nodeLookup[node] = [way.id]
+    return nodeLookup
+
+
+def pointBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
+    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
+    pass
 
 
 Q = 10

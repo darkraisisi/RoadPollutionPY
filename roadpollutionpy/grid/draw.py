@@ -6,6 +6,7 @@ import time
 import numpy as np
 import concurrent.futures
 import poll as pl
+import sys
 
 path = "maps/norm/"
 extension = ".json"
@@ -61,7 +62,7 @@ rds = None
 # drawPlot(data,rds)
 # drawPlot(data)
 
-matrix = pl.calc(data,rds)
+matrix = pl.boundBasedConcentration(data,rds)
 plt.imshow(matrix, cmap='hot', interpolation='quadric')
 plt.colorbar()
 plt.xlabel('longitude')
