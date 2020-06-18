@@ -10,11 +10,7 @@ Source: https://stackoverflow.com/a/21623206/7271827
 """
 
 """
-Source: https://scipython.com/book/chapter-7-matplotlib/examples/the-two-dimensional-diffusion-equation/
-A diffusion equation to minamilly disperse the produced NOx
-
-Diffusion flux of NOx generally is ~1.5 nmol mol^-1 or 
-https://agupubs.onlinelibrary.wiley.com/doi/pdf/10.1029/2003JD004326
+https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
 """
 
 """
@@ -55,6 +51,7 @@ def concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,theta,downWindDistance):
     (1 / (U*math.cos(theta)*sigZ)) *
     (math.erf(u1)-math.erf(u2)))
 
+
 def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
     x = []
     y = []
@@ -81,14 +78,10 @@ def getMinMaxDataframe(df:pd.DataFrame) -> tuple:
     max(df['lat']))
     
 
-def getBounds(matrixShape,lon_min,lon_max,lat_min,lat_max):
-    print(matrixShape)
-    print(lon_min,lon_max,lat_min,lat_max)
-    print(matrixShape)
+def getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max):
     bounds = np.zeros((matrixShape[0],matrixShape[1],2,2))
     hightFrac = (lat_max - lat_min) / matrixShape[0]
     widthFrac = (lon_max - lon_min) / matrixShape[1]
-    print(hightFrac,widthFrac)
 
     currHight = lat_max
     currWidth = lon_min
@@ -106,6 +99,18 @@ def getBounds(matrixShape,lon_min,lon_max,lat_min,lat_max):
     return bounds
 
 
+def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
+    boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
+    nodesInBounds = []
+    for rowIndex in range(0, matrixShape[0]):
+        nodesInBounds.append([]) # Add a new row
+        for columIndex in range(0, matrixShape[1]):
+            nodesInBounds[rowIndex].append([]) # Add a column to the row
+            nodes = getNodesInBounds(df,boundsRange[rowIndex][columIndex])
+            nodes.set_index('id')
+            nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
+    return nodesInBounds
+
 def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     startTime = time.time()
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
@@ -119,40 +124,41 @@ def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
     math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
 
-    print(matrix)
-
-    bounds = getBounds(matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    print(bounds.shape)
+    bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
     # print(getNodesInBounds(df,bounds[4][7]))
-    waysDf = df.loc[(df['type'] == 'way')]
-    lookUp = generateLookup(df)
+    nodeToWays = generateLookup(df)
+    nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
     i = 0
+    j=0
     # go through the different bounds
     for rowIndex in range(0, len(bounds)):
         for columIndex in range(0, len(bounds[rowIndex])):
             centerLat, centerLon = ((bounds[rowIndex][columIndex][0][0] + bounds[rowIndex][columIndex][0][1]) / 2) , ((bounds[rowIndex][columIndex][1][0] + bounds[rowIndex][columIndex][1][1]) / 2)
             # get all the nodes that are in the current bound
-            nodesInBound = getNodesInBounds(df,bounds[rowIndex][columIndex])
+            nodesInBound = nodesInBounds[rowIndex][columIndex]
             # get all the wayNodes that have one more nodes that are in the current bound
-            currentWaysId = []
-            if nodesInBound.size != 0:
-                for nodeInBound in nodesInBound.id:
-                    for wayId in lookUp[nodeInBound]:
-                        currentWaysId.append(wayId)
-                
-                nodesSet = set(nodesInBound['id'])
-                ways = waysDf.loc[(waysDf['id'].isin(currentWaysId))]
-                for way in ways.nodes:
-                    intersections = list(nodesSet.intersection(way))
-                    for wayIndex in range(0,len(intersections)-1):
-                        currNode, nextNode = nodesInBound.loc[nodesInBound.id == intersections[wayIndex]] , nodesInBound.loc[nodesInBound.id == intersections[wayIndex+1]]
-                        lineLength = calculateDistance(float(currNode.lat),float(nextNode.lat),float(currNode.lon),float(nextNode.lon))
-                        ret = concentration(Q,U,centerLon,centerLat,currNode.lon,currNode.lat,nextNode.lon,nextNode.lat,theta,(lineLength/4))
+            currentWaysId = {}
+            if len(nodesInBound) > 0:
+                for nodeInBound in nodesInBound:
+                    for wayId in nodeToWays[nodeInBound['id']]:
+                        if wayId in currentWaysId:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
+                        else:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId] = [nodeInBound]
+
+                for currWayId in currentWaysId:
+                    for wayIndex in range(0,len(currentWaysId[currWayId])-1):
+                        j+=1
+                        currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
+                        lineLength = calculateDistance(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
+                        ret = concentration(Q,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
                         matrix[rowIndex][columIndex] += ret
 
-                print(f'Amount of bounds calculated:{i}')
+                # print(f'Amount of bounds calculated:{i}')
                 i+=1
-
+    print('J:',j)
     print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
     return matrix
 
@@ -162,18 +168,19 @@ def getNodesInBounds(df:pd.DataFrame,bounds:list):
     # bounds[1] = [start longitude, end longitude]
     # lat 52.193919  lon 5.303260
     return df.loc[(df['lat'] >= bounds[0][0]) & (df['lat'] < bounds[0][1]) &
-    (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])
-    ]
+    (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])][['id','lat','lon','tags.highway','tags.maxspeed','tags.surface']]
 
 
 def generateLookup(df:pd.DataFrame):
+    # Key: Node id
+    # Value: List of dicts {Key: way id's, Value: order } 
     nodeLookup = {}
     for way in df.loc[df['type'] == 'way'].itertuples():
         for node in way.nodes:
             if node in nodeLookup:
-                nodeLookup[node].append(way.id)
+                nodeLookup[node].update({way.id:way.nodes.index(node)})
             else:
-                nodeLookup[node] = [way.id]
+                nodeLookup[node] = {way.id:way.nodes.index(node)}
     return nodeLookup
 
 

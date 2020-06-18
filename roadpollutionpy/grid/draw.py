@@ -11,8 +11,8 @@ import sys
 path = "maps/norm/"
 extension = ".json"
 
-mapName, name = ["baarnWays_way","baarn"]
-# mapName, name = ["utrechtSurWays_way","utrechtSur"]
+# mapName, name = ["baarnWays_way","baarn"]
+mapName, name = ["utrechtSurWays_way","utrechtSur"]
 # mapName, name = ["utrechtProvWays_way","utrechtProv"]
 
 # pd.set_option('display.max_columns', None)
