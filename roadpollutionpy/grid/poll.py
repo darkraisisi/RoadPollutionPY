@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
+from operator import itemgetter
 
 """
 Distance between longitude and latitude lines
@@ -10,6 +11,7 @@ Source: https://stackoverflow.com/a/21623206/7271827
 """
 
 """
+Creating a realistic circle out of squares
 https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
 """
 
@@ -106,7 +108,7 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
         nodesInBounds.append([]) # Add a new row
         for columIndex in range(0, matrixShape[1]):
             nodesInBounds[rowIndex].append([]) # Add a column to the row
-            nodes = getNodesInBounds(df,boundsRange[rowIndex][columIndex])
+            nodes = getNodesInBoundsFromDf(df,boundsRange[rowIndex][columIndex])
             nodes.set_index('id')
             nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
     return nodesInBounds
@@ -121,11 +123,11 @@ def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
 
     matrix = np.zeros(
-    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
-    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
+    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*10),
+    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*10 )))
 
     bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    # print(getNodesInBounds(df,bounds[4][7]))
+    # print(getNodesInBoundsFromDf(df,bounds[4][7]))
     nodeToWays = generateLookup(df)
     nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
     i = 0
@@ -163,7 +165,7 @@ def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     return matrix
 
 
-def getNodesInBounds(df:pd.DataFrame,bounds:list):
+def getNodesInBoundsFromDf(df:pd.DataFrame,bounds:list):
     # bounds[0] = [start latitude, end latitude line]
     # bounds[1] = [start longitude, end longitude]
     # lat 52.193919  lon 5.303260
@@ -184,9 +186,120 @@ def generateLookup(df:pd.DataFrame):
     return nodeLookup
 
 
-def pointBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
+def generateIndexListFromCircumference(coords:list):
+    print(coords)
+    startRow = min(coords,key=itemgetter(0))[0]
+    endRow = max(coords,key=itemgetter(0))[0]
+    startCol = min(coords,key=itemgetter(1))[1]
+    endCol = max(coords,key=itemgetter(1))[1]
+
+    outList = []
+
+    inside = False
+    for rowIndex in range(startRow,endRow+1):
+        inside = False
+        for colIndex in range(startCol,endCol+1):
+
+            if((rowIndex,colIndex) in coords):
+                inside = not inside
+                outList.append((rowIndex,colIndex))
+                continue
+
+            if(inside):
+                outList.append((rowIndex,colIndex))
+            
+    return outList
+
+
+def getNodesInBoundsByIndex(nodesInBounds,coords):
+    retNodes = []
+    for coord in coords:
+        retNodes.append(nodesInBounds[coord[0]][coord[1]])
+    return retNodes
+
+def generateCirleCoordsList(r,start:tuple):
+    # r, radius is the boundingboxsize multiplier. bbox 100x100m & 1r = r = 100m OR bbox 100x100m & 2r = r = 200m
+    # start, starting position of the circle
+    # 5,8
+    y_centre, x_centre = start
+    x = r 
+    y = 0
+    # pointList = set() 
+    pointList = []
+      
+    # When radius is zero only a single  
+    # point be printed  
+    if (r > 0) : 
+        pointList.append((-y + y_centre,x + x_centre))
+        pointList.append((x + y_centre,y + x_centre)) 
+        pointList.append((y_centre,-x + x_centre))
+      
+    # Initialising the value of P  
+    P = 1 - r  
+  
+    while x > y: 
+      
+        y += 1
+          
+        # Mid-point inside or on the perimeter 
+        if P <= 0:  
+            P = P + 2 * y + 1
+              
+        # Mid-point outside the perimeter  
+        else:          
+            x -= 1
+            P = P + 2 * y - 2 * x + 1
+          
+        # All the perimeter points have  
+        # already been printed  
+        if (x < y): 
+            break
+          
+        # Append the generated point its reflection  
+        # in the other octants after translation  
+        pointList.append((y + y_centre,x + x_centre))
+        pointList.append(( y + y_centre,-x + x_centre)) 
+        pointList.append((-y + y_centre,x + x_centre))
+        pointList.append((-y + y_centre,-x + x_centre))
+          
+        # If the generated point on the line x = y then  
+        # the perimeter points have already been appended  
+        if x != y: 
+            pointList.append((x + y_centre, y + x_centre))
+            pointList.append((x + y_centre,-y + x_centre)) 
+            pointList.append((-x + y_centre, y + x_centre))
+            pointList.append((-x + y_centre, -y + x_centre))
+
+    return list(pointList)
+
+
+def receptorpointBasedConcentration(df:pd.DataFrame,radius,roads:list = None) -> np.array:
+    # radius in meters
+    startTime = time.time()
+
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
-    pass
+
+    lonInKm = calculateDistance(lat_min,lat_min,lon_min,lon_max)
+    latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
+    print('lonInKm',lonInKm,'latInKm',latInKm)
+    print('lonInKm 1000',((lat_max - lat_min)*1000),'latInKm 1000',((lon_max - lon_min)*1000))
+    print(math.gcd(math.ceil((lat_max - lat_min)*1000),math.ceil((lon_max - lon_min)*1000)))
+    matrix = np.zeros(
+    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*10),
+    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*10 )))
+
+    # nodeToWays = generateLookup(df)
+
+    # bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
+    # nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
+    # i = 0
+    # depending on the size of the bounds you make the radius has a different impact as multiplier
+    # 
+    # for point in receptorPoints:
+    #     circumference = generateCirleCoordsList(3,point)
+    #     areaList = generateIndexListFromCircumference(circumference)
+    #     getNodesInBoundsByIndex(nodesInBounds,areaList)
+        
 
 
 Q = 10

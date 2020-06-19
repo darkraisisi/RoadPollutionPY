@@ -11,8 +11,8 @@ import sys
 path = "maps/norm/"
 extension = ".json"
 
-# mapName, name = ["baarnWays_way","baarn"]
-mapName, name = ["utrechtSurWays_way","utrechtSur"]
+mapName, name = ["baarnWays_way","baarn"]
+# mapName, name = ["utrechtSurWays_way","utrechtSur"]
 # mapName, name = ["utrechtProvWays_way","utrechtProv"]
 
 # pd.set_option('display.max_columns', None)
@@ -62,9 +62,11 @@ rds = None
 # drawPlot(data,rds)
 # drawPlot(data)
 
-matrix = pl.boundBasedConcentration(data,rds)
-plt.imshow(matrix, cmap='hot', interpolation='quadric')
-plt.colorbar()
-plt.xlabel('longitude')
-plt.ylabel('latitude')
-plt.show()
+# matrix = pl.boundBasedConcentration(data,rds)
+# plt.imshow(matrix, cmap='hot', interpolation='quadric')
+# plt.colorbar()
+# plt.xlabel('longitude')
+# plt.ylabel('latitude')
+# plt.show()
+test = pl.receptorpointBasedConcentration(data,100,rds)
+print(test)
