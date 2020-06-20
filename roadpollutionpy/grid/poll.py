@@ -67,10 +67,18 @@ def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
     plt.show()
 
 
-def calculateDistance(lat1, lat2, lon1, lon2):
+def calculateDistanceKm(lat1, lat2, lon1, lon2):
+    # In meters
     p = math.pi/180
     a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p) * math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p))/2
     return 12742 * math.asin(math.sqrt(a))
+
+
+def calculateDistanceM(lat1, lat2, lon1, lon2):
+    # In meters
+    p = math.pi/180
+    a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p) * math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p))/2
+    return 12742000 * math.asin(math.sqrt(a))
 
 
 def getMinMaxDataframe(df:pd.DataFrame) -> tuple:
@@ -113,18 +121,19 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
             nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
     return nodesInBounds
 
+
 def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
     startTime = time.time()
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
 
     print(lat_min,lat_min,lon_min,lon_max)
 
-    lonInKm = calculateDistance(lat_min,lat_min,lon_min,lon_max)
-    latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
+    lonInKm = calculateDistanceKm(lat_min,lat_min,lon_min,lon_max)
+    latInKm = calculateDistanceKm(lat_min,lat_max,lon_min,lon_min)
 
     matrix = np.zeros(
-    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*10),
-    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*10 )))
+    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
+    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
 
     bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
     # print(getNodesInBoundsFromDf(df,bounds[4][7]))
@@ -154,8 +163,8 @@ def boundBasedConcentration(df:pd.DataFrame,roads:list = None) -> np.array:
                     for wayIndex in range(0,len(currentWaysId[currWayId])-1):
                         j+=1
                         currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
-                        lineLength = calculateDistance(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
-                        ret = concentration(Q,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
+                        lineLength = calculateDistanceKm(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
+                        ret = concentration(10,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
                         matrix[rowIndex][columIndex] += ret
 
                 # print(f'Amount of bounds calculated:{i}')
@@ -187,7 +196,6 @@ def generateLookup(df:pd.DataFrame):
 
 
 def generateIndexListFromCircumference(coords:list):
-    print(coords)
     startRow = min(coords,key=itemgetter(0))[0]
     endRow = max(coords,key=itemgetter(0))[0]
     startCol = min(coords,key=itemgetter(1))[1]
@@ -214,8 +222,12 @@ def generateIndexListFromCircumference(coords:list):
 def getNodesInBoundsByIndex(nodesInBounds,coords):
     retNodes = []
     for coord in coords:
-        retNodes.append(nodesInBounds[coord[0]][coord[1]])
+        if coord[0] in range(-len(nodesInBounds), len(nodesInBounds)):
+            if coord[1] in range(-len(nodesInBounds[coord[0]]), len(nodesInBounds[coord[0]])):
+                retNodes.append(nodesInBounds[coord[0]][coord[1]])
+
     return retNodes
+
 
 def generateCirleCoordsList(r,start:tuple):
     # r, radius is the boundingboxsize multiplier. bbox 100x100m & 1r = r = 100m OR bbox 100x100m & 2r = r = 200m
@@ -275,30 +287,59 @@ def generateCirleCoordsList(r,start:tuple):
 
 def receptorpointBasedConcentration(df:pd.DataFrame,radius,roads:list = None) -> np.array:
     # radius in meters
+    bboxSize = 50
     startTime = time.time()
 
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
 
-    lonInKm = calculateDistance(lat_min,lat_min,lon_min,lon_max)
-    latInKm = calculateDistance(lat_min,lat_max,lon_min,lon_min)
+    lonInKm = calculateDistanceM(lat_min,lat_min,lon_min,lon_max)
+    latInKm = calculateDistanceM(lat_min,lat_max,lon_min,lon_min)
+
+    print(lon_min, lon_max, lat_min ,lat_max)
     print('lonInKm',lonInKm,'latInKm',latInKm)
-    print('lonInKm 1000',((lat_max - lat_min)*1000),'latInKm 1000',((lon_max - lon_min)*1000))
-    print(math.gcd(math.ceil((lat_max - lat_min)*1000),math.ceil((lon_max - lon_min)*1000)))
-    matrix = np.zeros(
-    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*10),
-    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*10 )))
+    print('lon/100 ceil',math.ceil(lonInKm/bboxSize),'lat/100 ceil',math.ceil(latInKm/bboxSize))
 
-    # nodeToWays = generateLookup(df)
+    concentrationMatrix = np.zeros(
+        (math.ceil(latInKm/bboxSize),math.ceil(lonInKm/bboxSize))
+    )
 
-    # bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    # nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    # i = 0
+    nodeToWays = generateLookup(df)
+    bounds = getBoundsRanges(concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
+    nodesInBounds = getBoundsNodelist(df,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
+    i = 0
+    latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
+    lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
     # depending on the size of the bounds you make the radius has a different impact as multiplier
-    # 
-    # for point in receptorPoints:
-    #     circumference = generateCirleCoordsList(3,point)
-    #     areaList = generateIndexListFromCircumference(circumference)
-    #     getNodesInBoundsByIndex(nodesInBounds,areaList)
+    for rowIndex in range(0, len(concentrationMatrix)):
+        centerLat = lat_min + (latFreq * rowIndex)
+        for colIndex in range(0, len(concentrationMatrix[rowIndex])):
+            centerLon = lon_min + (lonFreq * colIndex)
+            # print(centerLat,centerLon)
+            # print(rowIndex,colIndex)
+            circumference = generateCirleCoordsList(int(radius/bboxSize),(rowIndex,colIndex))
+            areaList = generateIndexListFromCircumference(circumference)
+            nodesList = getNodesInBoundsByIndex(nodesInBounds,areaList)
+            # print('len',len(nodesList))
+            currentWaysId = {}
+            for nodes in nodesList:
+                for nodeInBound in nodes:
+                    for wayId in nodeToWays[nodeInBound['id']]:
+                        if wayId in currentWaysId:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
+                        else:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId] = [nodeInBound]
+
+            for currWayId in currentWaysId:
+                for wayIndex in range(0,len(currentWaysId[currWayId])-1):
+                    currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
+                    lineLength = calculateDistanceM(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
+                    ret = concentration(10,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
+                    concentrationMatrix[rowIndex][colIndex] += ret
+
+    return concentrationMatrix
+
         
 
 
