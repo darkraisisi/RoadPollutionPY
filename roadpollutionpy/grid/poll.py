@@ -53,14 +53,8 @@ def calcSigY(x):
 
 def limit(Xr,Yr,Xi,Yi,theta,sigY):
     # calculates the respective distance between the receptor and the given point to create a limit
-    try:
-        return (((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta))/
+    return (((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta))/
     (math.sqrt(2*sigY)))
-    except ZeroDivisionError:
-        print(Yr,Yi,theta,Xr,Xi,sigY)
-        print(((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta)))
-        print((math.sqrt(2*sigY)))
-    
 
 
 def concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,theta,downWindDistance):
