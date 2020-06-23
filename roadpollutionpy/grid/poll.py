@@ -13,6 +13,20 @@ Source: https://stackoverflow.com/a/21623206/7271827
 """
 Creating a realistic circle out of squares
 https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
+Source for code function generateCirleCoordsList:
+https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/ by Nabaneet Roy & Tuhina Singh Improved and alterd by David Demmers
+"""
+
+"""
+Using the emission factor to calculate actual emission
+https://www.sciencedirect.com/topics/engineering/emission-factor 5.7
+E = A * EF 
+E: Emissions in units, A: Activity rate in unit distance, EF: Emission Factor in unit per pollutant
+"""
+
+"""
+European source of emission factors for NOx and generalisation for car dispersion.
+https://www.eea.europa.eu/publications/EMEPCORINAIR5/page016.html
 """
 
 """
@@ -37,21 +51,39 @@ def calcSigY(x):
     return 0.16*x*math.pow(1+0.0004*x,-0.5)
 
 
-def limit(Xr,Yr,Xi,Yi,theta):
+def limit(Xr,Yr,Xi,Yi,theta,sigY):
     # calculates the respective distance between the receptor and the given point to create a limit
-    return (((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta))/
+    try:
+        return (((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta))/
     (math.sqrt(2*sigY)))
+    except ZeroDivisionError:
+        print(Yr,Yi,theta,Xr,Xi,sigY)
+        print(((Yr - Yi)*math.cos(theta)-(Xr - Xi)*math.sin(theta)))
+        print((math.sqrt(2*sigY)))
+    
 
 
 def concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,theta,downWindDistance):
-    u1 = limit(Xr,Yr,X1,Y1,theta)
-    u2 = limit(Xr,Yr,X2,Y2,theta)
     # x = downwind distance from the source to the receptor
-    # sigZ = calcSigZ(downWindDistance)
-    # sigY = calcSigY(downWindDistance)
+    sigZ = calcSigZ(downWindDistance)
+    sigY = calcSigY(downWindDistance)
+    # print(downWindDistance)
+    # print(sigZ,sigY)
+
+    u1 = limit(Xr,Yr,X1,Y1,theta,sigY)
+    u2 = limit(Xr,Yr,X2,Y2,theta,sigY)
+    
     return ((Q / math.sqrt(2*math.pi)) * 
     (1 / (U*math.cos(theta)*sigZ)) *
     (math.erf(u1)-math.erf(u2)))
+
+
+def emissionfactorToEmission(distance, EF):
+    return distance * EF
+
+
+def emissionfactorToReducedEmission(distance, EF, ER):
+    return emissionfactorToEmission(distance,EF)*(1-ER/100)
 
 
 def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
@@ -78,6 +110,8 @@ def calculateDistanceM(lat1, lat2, lon1, lon2):
     # In meters
     p = math.pi/180
     a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p) * math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p))/2
+    if a == 0:
+        return 1
     return 12742000 * math.asin(math.sqrt(a))
 
 
@@ -195,6 +229,87 @@ def generateLookup(df:pd.DataFrame):
     return nodeLookup
 
 
+def waytypeToSpeed(_type:str):
+    if _type == 'service':
+        return 30
+    if _type == 'cycleway':
+        return 50 # moped speed
+    if _type == 'pedestrian' or 'footway' or 'path':
+        return 1
+    if _type == 'motorway_link':
+        return 80
+    if _type == 'primary':
+        return 80
+    if _type == 'secondary':
+        return 50
+    if _type == 'tertiary':
+        return 30
+    if _type == 'residential':
+        return 30
+    if _type == 'living_street':
+        return 30
+    if _type == 'unclassified':
+        return 30
+    else:
+        Exception
+
+
+def effMoped(speed):
+    # Table 8-30: Euro 3
+    return 0.26
+
+
+def effPassenger(speed):
+    # Table 8-5, ECE 15-04, CC > 2.0 l, gasoline 
+    return 2.427 - 0.014 * speed + 0.000266*math.pow(speed,2)
+
+
+def effLightduty(speed):
+    # Table 8-24, conventional, gasoline vehicles <3.5 t
+    return 0.0179 * speed + 1.9547
+
+
+def effHeavyduty(speed):
+    # Table 8-28, gasoline vehicles >3.5 t
+    if(speed < 60):
+        return 4.5 # urban
+    else:
+        return 7.5 # Highway
+
+
+def generateWayEF(df:pd.DataFrame):
+    wayLookup = {}
+    for way in df.loc[df['type'] == 'way'].itertuples():
+        _type = str(way._6)
+        if(way._8):
+            speed = int(way._8)
+        else:
+            speed = waytypeToSpeed(_type)
+        
+        if _type == 'service':
+            eff, busy = (effPassenger(speed)*0.9 + effLightduty(speed)*0.1), 1
+        if _type == 'cycleway':
+            eff, busy = effMoped(speed), 1
+        if _type == 'pedestrian' or 'footway' or 'path':
+            eff, busy = effMoped(speed) * 0.1 , 1
+        if _type == 'motorway_link' or 'motorway' or 'highway' or 'speedway':
+            eff, busy = (effPassenger(speed)*0.55 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.25), 10
+        if _type == 'primary':
+            eff, busy = (effPassenger(speed)*0.6 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.2), 6
+        if _type == 'secondary':
+            eff, busy = (effPassenger(speed)*0.7 + effLightduty(speed)*0.15 + effHeavyduty(speed)*0.15), 5
+        if _type == 'tertiary':
+            eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 3
+        if _type == 'residential' or 'living_street':
+            eff, busy = (effPassenger(speed)*0.9 + effLightduty(speed)*0.05 + effMoped(speed) * 0.05), 1
+        else:
+            print(f'ELSE: {_type}')
+            eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 2
+
+        wayLookup[way.id] = {'eff':eff,'busy':busy}
+    return wayLookup
+
+
 def generateIndexListFromCircumference(coords:list):
     startRow = min(coords,key=itemgetter(0))[0]
     endRow = max(coords,key=itemgetter(0))[0]
@@ -285,16 +400,25 @@ def generateCirleCoordsList(r,start:tuple):
     return list(pointList)
 
 
-def receptorpointBasedConcentration(df:pd.DataFrame,radius,roads:list = None) -> np.array:
+def receptorpointBasedConcentration(df:pd.DataFrame,radius,bboxSize:int = 100,roads:list = None) -> np.array:
     # radius in meters
-    bboxSize = 50
+    # bboxSize in meters
+    """
+    a not working! /maybe/ better average downwind distance
+    averageDownwind = calculateDistanceM(
+        centerLat, (float(currNode['lat'])+float(nextNode['lat']))/2,
+        centerLon,(float(currNode['lon'])+float(nextNode['lon']))/2)
+    """
+    
+
     startTime = time.time()
+    total = 0
 
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
 
     lonInKm = calculateDistanceM(lat_min,lat_min,lon_min,lon_max)
     latInKm = calculateDistanceM(lat_min,lat_max,lon_min,lon_min)
-
+    # left, right, bottom, top
     print(lon_min, lon_max, lat_min ,lat_max)
     print('lonInKm',lonInKm,'latInKm',latInKm)
     print('lon/100 ceil',math.ceil(lonInKm/bboxSize),'lat/100 ceil',math.ceil(latInKm/bboxSize))
@@ -304,22 +428,19 @@ def receptorpointBasedConcentration(df:pd.DataFrame,radius,roads:list = None) ->
     )
 
     nodeToWays = generateLookup(df)
-    bounds = getBoundsRanges(concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
+    wayIdToInfo = generateWayEF(df)
     nodesInBounds = getBoundsNodelist(df,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
-    i = 0
     latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
     lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
     # depending on the size of the bounds you make the radius has a different impact as multiplier
     for rowIndex in range(0, len(concentrationMatrix)):
-        centerLat = lat_min + (latFreq * rowIndex)
+        centerLat = lat_max - (latFreq * rowIndex)
         for colIndex in range(0, len(concentrationMatrix[rowIndex])):
+            total +=1
             centerLon = lon_min + (lonFreq * colIndex)
-            # print(centerLat,centerLon)
-            # print(rowIndex,colIndex)
-            circumference = generateCirleCoordsList(int(radius/bboxSize),(rowIndex,colIndex))
+            circumference = generateCirleCoordsList(int(radius/bboxSize)-1,(rowIndex,colIndex))
             areaList = generateIndexListFromCircumference(circumference)
             nodesList = getNodesInBoundsByIndex(nodesInBounds,areaList)
-            # print('len',len(nodesList))
             currentWaysId = {}
             for nodes in nodesList:
                 for nodeInBound in nodes:
@@ -332,12 +453,17 @@ def receptorpointBasedConcentration(df:pd.DataFrame,radius,roads:list = None) ->
                             currentWaysId[wayId] = [nodeInBound]
 
             for currWayId in currentWaysId:
+                EF = wayIdToInfo[currWayId]['eff']
+                busyness = wayIdToInfo[currWayId]['busy']
                 for wayIndex in range(0,len(currentWaysId[currWayId])-1):
                     currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
                     lineLength = calculateDistanceM(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
-                    ret = concentration(10,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
+                    emission = emissionfactorToEmission(lineLength/1000,EF*busyness)
+                    ret = concentration(emission,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
                     concentrationMatrix[rowIndex][colIndex] += ret
 
+            # print(f'Receptor {total}/{concentrationMatrix.size}')
+    print(f'Full setup and 1 cycle of concentration took: {time.time() - startTime}s')
     return concentrationMatrix
 
         

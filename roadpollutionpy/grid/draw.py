@@ -25,7 +25,7 @@ def readFromFile(name:str) -> pd.DataFrame:
     return df
 
 
-def drawPlot(data:pd.DataFrame,roads:list=None) -> None:
+def drawPlot(data:pd.DataFrame, roads:list=None) -> None:
     # data.plot(kind='scatter',x='lon',y='lat',color='red')
 
     startTime = time.time()
@@ -54,6 +54,13 @@ def drawPlot(data:pd.DataFrame,roads:list=None) -> None:
     plt.ylabel('latitude')
     plt.show()
 
+def drawImagePlot(matrix, name, bboxSize, radius):
+    plt.imshow(matrix, cmap='hot', interpolation='quadric')
+    plt.colorbar()
+    plt.xlabel('longitude')
+    plt.ylabel('latitude')
+    plt.title(f'{name} bbox{bboxSize}_R{radius}')
+    plt.show()
 
 data = readFromFile(mapName)
 rds = None
@@ -63,14 +70,8 @@ rds = None
 # drawPlot(data)
 
 # matrix = pl.boundBasedConcentration(data,rds)
-# plt.imshow(matrix, cmap='hot', interpolation='quadric')
-# plt.colorbar()
-# plt.xlabel('longitude')
-# plt.ylabel('latitude')
-# plt.show()
-matrix = pl.receptorpointBasedConcentration(data,100,rds)
-plt.imshow(matrix, cmap='hot', interpolation='quadric')
-plt.colorbar()
-plt.xlabel('longitude')
-plt.ylabel('latitude')
-plt.show()
+# drawImagePlot(matrix,name,bboxSize,radius)
+bboxSize = 50 # in meters
+radius = 150 # in meters
+matrix = pl.receptorpointBasedConcentration(data,radius,bboxSize,rds)
+drawImagePlot(matrix,name,bboxSize,radius)
