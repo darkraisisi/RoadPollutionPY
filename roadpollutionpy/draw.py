@@ -10,7 +10,16 @@ import pandas as pd
 import config as conf
 
 
-def readFromFile(name:str) -> pd.DataFrame:
+def readFromFile(name) -> pd.DataFrame:
+    """
+    Get a Dataframe form json file.
+
+    Parameters:
+        name (str): A string containing the name of the file.
+        
+    Returns:
+        response (Pandas.DataFrame): A dataframe with all the nodes and ways.
+    """
     if(conf.draw['verbose']):
         print(conf.draw['path'])
     df = pd.json_normalize(pd.read_json(conf.draw['path'],typ='series', dtype=object))
@@ -19,6 +28,15 @@ def readFromFile(name:str) -> pd.DataFrame:
 
 
 def plot(data:pd.DataFrame, roads:list=None) -> None:
+    """
+    Draw and show a figure with all the roads in the given dataframe.
+
+    Parameters:
+        data (Pandas.DataFrame): A dataframe containing a map with nodes and ways
+        
+    Returns:
+        None: Shows a figure
+    """
     if(conf.draw['verbose']):
         startTime = time.time()
 
@@ -46,6 +64,18 @@ def plot(data:pd.DataFrame, roads:list=None) -> None:
 
 
 def imagePlot(matrix, name, bboxSize, radius):
+    """
+    Draw and show an figure with the values of a concentration matrix
+
+    Parameters:
+        matrix (list[list[]]): a 2 dimensional matrix with numerical values in the cells.
+        name (str): The name of the plot.
+        bboxSize (int): The size of the bounding boxes used.
+        radius (int): The radius around the receptor points used.
+        
+    Returns:
+        None: Shows a figure
+    """
     plt.imshow(matrix, cmap='hot', interpolation='quadric')
     plt.colorbar()
     plt.xlabel('longitude')
@@ -55,6 +85,17 @@ def imagePlot(matrix, name, bboxSize, radius):
 
 
 def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=None):
+    """
+    Draw and show an figure with the values of a concentration matrix and all roads overlayed.
+
+    Parameters:
+        matrix (list[list[]]): a 2 dimensional matrix with numerical values in the cells.
+        data (Pandas.DataFrame): A dataframe containing a map with nodes and ways.
+        roads (list[str]): a list of roads that you want to draw, none suggests you want to draw all is default.
+        
+    Returns:
+        None: Shows a figure
+    """
     # This function is an attempt to add both plots in one figure
     fig = plt.figure()
     concentrationFig = fig.add_subplot(111,label='concentration')
