@@ -1,35 +1,27 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-# from math import sin, cos, sqrt, atan2, radians, pi, asin
-import math
-import time 
-import numpy as np
 import concurrent.futures
-import poll as pl
+import math
 import sys
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 import config as conf
 
-path = "maps/norm/"
-extension = ".json"
-
-mapName, name = ["baarnWays_way","baarn"]
-# mapName, name = ["utrechtSurWays_way","utrechtSur"]
-# mapName, name = ["utrechtProvWays_way","utrechtProv"]
-
-# pd.set_option('display.max_columns', None)
-# pd.set_option('display.max_rows', None)
 
 def readFromFile(name:str) -> pd.DataFrame:
-    print(path+name+extension)
-    df = pd.json_normalize(pd.read_json(path+name+extension,typ='series', dtype=object))
+    if(conf.draw['verbose']):
+        print(conf.draw['path'])
+    df = pd.json_normalize(pd.read_json(conf.draw['path'],typ='series', dtype=object))
     df.set_index('id')
     return df
 
 
-def drawPlot(data:pd.DataFrame, roads:list=None) -> None:
-    # data.plot(kind='scatter',x='lon',y='lat',color='red')
+def plot(data:pd.DataFrame, roads:list=None) -> None:
+    if(conf.draw['verbose']):
+        startTime = time.time()
 
-    startTime = time.time()
     data = data.drop_duplicates('id',keep='first')
     
     i=0
@@ -46,14 +38,14 @@ def drawPlot(data:pd.DataFrame, roads:list=None) -> None:
             # plot the two lists of longitude and latitude lines
             plt.plot(out.lon,out.lat,color='green')
             i+=1
-
-    print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
+    if(conf.draw['verbose']):
+        print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
     plt.xlabel('longitude')
     plt.ylabel('latitude')
     plt.show()
 
 
-def drawImagePlot(matrix, name, bboxSize, radius):
+def imagePlot(matrix, name, bboxSize, radius):
     plt.imshow(matrix, cmap='hot', interpolation='quadric')
     plt.colorbar()
     plt.xlabel('longitude')
@@ -62,7 +54,8 @@ def drawImagePlot(matrix, name, bboxSize, radius):
     plt.show()
 
 
-def drawConcentrationAndRoads(concentrationMatrix, data:pd.DataFrame):
+def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=None):
+    # This function is an attempt to add both plots in one figure
     fig = plt.figure()
     concentrationFig = fig.add_subplot(111,label='concentration')
     wayFig = fig.add_subplot(111,label='roads', frame_on=False)
@@ -72,8 +65,8 @@ def drawConcentrationAndRoads(concentrationMatrix, data:pd.DataFrame):
     concentrationFig.tick_params(axis='x', colors="red")
     concentrationFig.tick_params(axis='y', colors="red")
 
-    if(rds):
-        for node in data.loc[(data['highway'].isin(rds))].itertuples():
+    if(roads):
+        for node in data.loc[(data['highway'].isin(roads))].itertuples():
             out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
             wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
     else:
@@ -92,21 +85,3 @@ def drawConcentrationAndRoads(concentrationMatrix, data:pd.DataFrame):
     wayFig.yaxis.set_label_position('right') 
     plt.show()
 
-
-data = readFromFile(mapName)
-rds = conf.draw['roads']
-# drawPlot(data,rds)
-# drawPlot(data)
-
-# matrix = pl.boundBasedConcentration(data,rds)
-# drawImagePlot(matrix,name,bboxSize,radius)
-bboxSize = conf.sim['bbox_size']
-radius = conf.sim['radius']
-windSpeed = conf.sim['wind_speed']
-windAngle = conf.sim['wind_angle']
-concentrationMatrix = pl.receptorpointBasedConcentration(data,windSpeed,windAngle,radius,bboxSize,rds)
-# drawImagePlot(matrix,name,bboxSize,radius)
-# drawImagePlot(matrix,name,concentrationFig,bboxSize,radius)
-# drawPlot(data,wayFig)
-
-drawConcentrationAndRoads(concentrationMatrix,data)

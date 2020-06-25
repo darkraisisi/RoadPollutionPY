@@ -23,8 +23,9 @@ sim = {
     "verbose": False,
     "bbox_size": 50, # Meters.
     "radius": 300, # Meters.
-    "wind_angle": 40, # Keep this parameter between -89 and 89 as it is relative to the road
+    "wind_angle": 40, # Keep this parameter between -89 and 89 as it is relative to the road.
     "wind_speed": 3, # Meters/second.
+    "downwind": 0.25, # Hardcoded fraction, part of the road that is down wind from the receptor point.
     "roads": {
         "speeds": {
             "service": 30,
@@ -55,5 +56,7 @@ sim = {
 
 # Drawing related settings.
 draw = { 
+    "verbose": False,
     "roads": None, # List of roadTypeNames to draw.
+    "path":osm["normalisation"]["path"]+sim["current"]+osm["extension"]
 }

@@ -1,10 +1,14 @@
 import math
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import time
 from operator import itemgetter
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 import config as conf
+import draw
+
 
 """
 Distance between longitude and latitude lines
@@ -286,11 +290,11 @@ def generateWayEF(df:pd.DataFrame):
             eff, busy = effMoped(speed) * 0.1 , 1
         elif _type == 'motorway_link' or _type == 'motorway' or _type == 'highway' or _type == 'speedway':
             eff, busy = (effPassenger(speed)*0.55 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.25), 10
-        elif _type == 'primary':
+        elif _type == 'primary' or  _type == 'primary_link':
             eff, busy = (effPassenger(speed)*0.6 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.2), 8
-        elif _type == 'secondary':
+        elif _type == 'secondary' or  _type == 'secondary_link':
             eff, busy = (effPassenger(speed)*0.7 + effLightduty(speed)*0.15 + effHeavyduty(speed)*0.15), 5
-        elif _type == 'tertiary':
+        elif _type == 'tertiary' or  _type == 'tertiary_link':
             eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 3
         elif _type == 'residential' or _type == 'living_street':
             eff, busy = (effPassenger(speed)*0.9 + effLightduty(speed)*0.05 + effMoped(speed) * 0.05), 1
@@ -299,7 +303,7 @@ def generateWayEF(df:pd.DataFrame):
             eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 2
 
         wayLookup[way.id] = {'eff':eff,'busy':busy}
-    print(f'Unhandled ways:{unhandled}')
+    print(f'Warning, unhandled ways:{unhandled}')
     return wayLookup
 
 
@@ -393,28 +397,27 @@ def generateCirleCoordsList(r,start:tuple):
     return list(pointList)
 
 
-def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100,roads:list = None) -> np.array:
-    # radius in meters
-    # bboxSize in meters
+def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100) -> np.array:
     """
     a not working! /maybe/ better average downwind distance
     averageDownwind = calculateDistanceM(
         centerLat, (float(currNode['lat'])+float(nextNode['lat']))/2,
         centerLon,(float(currNode['lon'])+float(nextNode['lon']))/2)
     """
-    
 
     startTime = time.time()
     total = 0
+    downWindFrac = conf.sim['downwind']
 
     lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
 
     lonInKm = calculateDistanceM(lat_min,lat_min,lon_min,lon_max)
     latInKm = calculateDistanceM(lat_min,lat_max,lon_min,lon_min)
-    # left, right, bottom, top
-    print(lon_min, lon_max, lat_min ,lat_max)
-    print('lonInKm',lonInKm,'latInKm',latInKm)
-    print('lon/100 ceil',math.ceil(lonInKm/bboxSize),'lat/100 ceil',math.ceil(latInKm/bboxSize))
+    
+    if(conf.sim['verbose']):
+        print(lon_min, lon_max, lat_min ,lat_max)
+        print('lonInKm',lonInKm,'latInKm',latInKm)
+        print('lon/100 ceil',math.ceil(lonInKm/bboxSize),'lat/100 ceil',math.ceil(latInKm/bboxSize))
 
     concentrationMatrix = np.zeros(
         (math.ceil(latInKm/bboxSize),math.ceil(lonInKm/bboxSize))
@@ -425,6 +428,8 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
     nodesInBounds = getBoundsNodelist(df,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
     latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
     lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
+    if(conf.sim['verbose']):
+        print(f'Prep took: {time.time() - startTime}s')
     # depending on the size of the bounds you make the radius has a different impact as multiplier
     for rowIndex in range(0, len(concentrationMatrix)):
         centerLat = lat_max - (latFreq * rowIndex)
@@ -437,13 +442,14 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
             currentWaysId = {}
             for nodes in nodesList:
                 for nodeInBound in nodes:
-                    for wayId in nodeToWays[nodeInBound['id']]:
-                        if wayId in currentWaysId:
-                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
-                            currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
-                        else:
-                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
-                            currentWaysId[wayId] = [nodeInBound]
+                    if(nodeInBound['id'] in nodeToWays):
+                        for wayId in nodeToWays[nodeInBound['id']]:
+                            if wayId in currentWaysId:
+                                nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                                currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
+                            else:
+                                nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                                currentWaysId[wayId] = [nodeInBound]
 
             for currWayId in currentWaysId:
                 EF = wayIdToInfo[currWayId]['eff']
@@ -452,10 +458,11 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
                     currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
                     lineLength = calculateDistanceM(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
                     emission = emissionfactorToEmission(lineLength/1000,EF*busyness)
-                    ret = concentration(emission,windSpeed,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],windAngle,(lineLength/4))
+                    ret = concentration(emission,windSpeed,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],windAngle,(lineLength*downWindFrac))
                     concentrationMatrix[rowIndex][colIndex] += ret
 
             # print(f'Receptor {total}/{concentrationMatrix.size}')
-    print(f'Full setup and 1 cycle of concentration took: {time.time() - startTime}s')
+    if(conf.sim['verbose']):
+        print(f'Full setup and 1 cycle of concentration took: {time.time() - startTime}s')
     return concentrationMatrix
 

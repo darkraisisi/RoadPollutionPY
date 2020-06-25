@@ -20,8 +20,8 @@ def getWayFromCoordinates(coordinates:str) -> str:
     return response
 
 
-def writeToFile(name:str,data:str) -> None:
-    with open(conf.osm['path']+name+conf.osm['extension'],'w') as outfile:
+def writeToFile(fullPath:str,data:str) -> None:
+    with open(fullPath,'w') as outfile:
         json.dump(data['elements'],outfile)
 
 
@@ -64,16 +64,6 @@ def getDataframeTotalSize(df):
     print(size)
 
 
-def dataframeToFile(df:pd.DataFrame,name):
-    df.to_json(conf.osm['normalisation']['path']+name+conf.osm['extension'],orient='records')
-
-name = conf.sim['current']
-
-# res = getWayFromCoordinates(conf.osm["coordinates"][name])
-# writeToFile(name,res)
-
-# normalize
-df = readFromFile(name)
-normDf = normalizeDataframe(df,conf.osm['normalisation']['cols'],True)
-dataframeToFile(normDf,name)
+def dataframeToFile(df:pd.DataFrame,fullPath):
+    df.to_json(fullPath,orient='records')
 
