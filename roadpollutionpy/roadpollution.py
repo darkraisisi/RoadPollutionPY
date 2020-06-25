@@ -114,22 +114,20 @@ inputToFunction = {
     "quit": quit
 }
 
+if __name__ == "main":
+    while True:
+        try:
+            selection = str(
+            input("\nwhich function would you like to perform?\n\n"+
+            "1: Simulate current, radial bounds, concentration map\n"+
+            "2: Simulate current, radial bounds, concentration map & roads\n"+
+            "3: Download & normalize new map by current name \n"+
+            "4: Download new map by current name \n"+
+            "5: Normalize map by current name \n"+
+            "quit\n"))
+            
+            inputToFunction[selection]()
 
-while True:
-    try:
-        selection = str(
-        input("\nwhich function would you like to perform?\n\n"+
-        "1: Simulate current, radial bounds, concentration map\n"+
-        "2: Simulate current, radial bounds, concentration map & roads\n"+
-        "3: Download & normalize new map by current name \n"+
-        "4: Download new map by current name \n"+
-        "5: Normalize map by current name \n"+
-        "quit\n"))
-        
-        inputToFunction[selection]()
+        except Exception as x:
+            print(f"An error occured.\n{x} ")
 
-    except Exception as x:
-        print(f"An error occured.\n{x} ")
-
-
-    
