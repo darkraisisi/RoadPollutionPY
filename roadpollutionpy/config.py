@@ -42,16 +42,14 @@ sim = {
             "residential": 30,
             "living_street": 30,
             "unclassified": 30
-        },
-        # Options for overwriting metadata to see the effect of changing the speed on pollution 
-        "overwriting":{
-            "enabled": False,
-            "roads_speeds":{
-                "motorway": 80,
-                "residential": 15
-            }
         }
-
+    },
+    "overwriting": { # Options for overwriting metadata to see the effect of changing the speed on pollution 
+        "enabled": False,
+        "roads_speeds":{
+            "motorway": 130,
+            "residential": 15
+        }
     }
 }
 

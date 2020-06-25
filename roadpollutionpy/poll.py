@@ -268,9 +268,12 @@ def effHeavyduty(speed):
 def generateWayEF(df:pd.DataFrame):
     unhandled = set()
     wayLookup = {}
+    
     for way in df.loc[df['type'] == 'way'].itertuples():
         _type = str(way.highway)
-        if(way.maxspeed):
+        if conf.sim['overwriting']['enabled'] and _type in conf.sim['overwriting']['roads_speeds']:
+            speed = conf.sim['overwriting']['roads_speeds'][_type]
+        elif(way.maxspeed):
             speed = int(way.maxspeed)
         else:
             speed = waytypeToSpeed(_type)
