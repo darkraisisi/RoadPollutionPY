@@ -1,6 +1,7 @@
 
 # Byte-compiled / optimized / DLL files
-maps/*
+maps/*.json
+maps/norm/*.json
 __pycache__/
 *.py[cod]
 *$py.class

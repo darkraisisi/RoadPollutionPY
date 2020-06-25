@@ -7,6 +7,7 @@ import numpy as np
 import concurrent.futures
 import poll as pl
 import sys
+import config as conf
 
 path = "maps/norm/"
 extension = ".json"
@@ -47,12 +48,10 @@ def drawPlot(data:pd.DataFrame, roads:list=None) -> None:
             i+=1
 
     print(f'Looping through all ways took {time.time() - startTime}s, {i} amount of ways')
-    # matrix = pl.calc(data,roads)
-    # plt.imshow(matrix, cmap='hot', interpolation='nearest')
-    # plt.colorbar()
     plt.xlabel('longitude')
     plt.ylabel('latitude')
     plt.show()
+
 
 def drawImagePlot(matrix, name, bboxSize, radius):
     plt.imshow(matrix, cmap='hot', interpolation='quadric')
@@ -62,16 +61,52 @@ def drawImagePlot(matrix, name, bboxSize, radius):
     plt.title(f'{name} bbox{bboxSize}_R{radius}')
     plt.show()
 
+
+def drawConcentrationAndRoads(concentrationMatrix, data:pd.DataFrame):
+    fig = plt.figure()
+    concentrationFig = fig.add_subplot(111,label='concentration')
+    wayFig = fig.add_subplot(111,label='roads', frame_on=False)
+    concentrationFig.imshow(concentrationMatrix, cmap='hot', interpolation='quadric')
+    concentrationFig.set_xlabel('boundCol', color='red')
+    concentrationFig.set_ylabel('boundRow', color='red')
+    concentrationFig.tick_params(axis='x', colors="red")
+    concentrationFig.tick_params(axis='y', colors="red")
+
+    if(rds):
+        for node in data.loc[(data['highway'].isin(rds))].itertuples():
+            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
+    else:
+        # Go through all ways
+        for node in data.loc[(data['type'] == 'way')].itertuples():
+            # Get the current way and look at the nodes that mare the road and get a list returned based on the id's
+            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            # plot the two lists of longitude and latitude lines
+            wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
+
+    wayFig.set_xlabel('longitude', color='green')
+    wayFig.set_ylabel('latitude', color='green')
+    wayFig.xaxis.tick_top()
+    wayFig.yaxis.tick_right()
+    wayFig.xaxis.set_label_position('top') 
+    wayFig.yaxis.set_label_position('right') 
+    plt.show()
+
+
 data = readFromFile(mapName)
-rds = None
-# rds = ['motorway_link','primary','secondary','tertiary']
-# rds = ['motorway_link','primary','secondary','tertiary','residential','service']
+rds = conf.draw['roads']
 # drawPlot(data,rds)
 # drawPlot(data)
 
 # matrix = pl.boundBasedConcentration(data,rds)
 # drawImagePlot(matrix,name,bboxSize,radius)
-bboxSize = 50 # in meters
-radius = 150 # in meters
-matrix = pl.receptorpointBasedConcentration(data,radius,bboxSize,rds)
-drawImagePlot(matrix,name,bboxSize,radius)
+bboxSize = conf.sim['bbox_size']
+radius = conf.sim['radius']
+windSpeed = conf.sim['wind_speed']
+windAngle = conf.sim['wind_angle']
+concentrationMatrix = pl.receptorpointBasedConcentration(data,windSpeed,windAngle,radius,bboxSize,rds)
+# drawImagePlot(matrix,name,bboxSize,radius)
+# drawImagePlot(matrix,name,concentrationFig,bboxSize,radius)
+# drawPlot(data,wayFig)
+
+drawConcentrationAndRoads(concentrationMatrix,data)

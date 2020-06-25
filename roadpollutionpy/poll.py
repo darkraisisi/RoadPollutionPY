@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 from operator import itemgetter
+import config as conf
 
 """
 Distance between longitude and latitude lines
@@ -81,6 +82,17 @@ def emissionfactorToReducedEmission(distance, EF, ER):
 
 
 def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
+    """
+    Q = 10
+    U = 3 # 3 m/s average wind speed
+    theta = 40 # 
+    # Xr, Yr = 1800, 9200
+    Xr, Yr = 1200, 9800
+    X1,Y1, X2,Y2 = 1000, 9000, 2000, 10000
+
+    sigZ = 4.5 # a value based on the fact that a third of every road is downwind, based on 100m between nodes
+    sigY = 5   # a value based on the fact that a third of every road is downwind, based on 100m between nodes
+    """
     x = []
     y = []
     for i in range(-89,90,1):
@@ -207,7 +219,7 @@ def getNodesInBoundsFromDf(df:pd.DataFrame,bounds:list):
     # bounds[1] = [start longitude, end longitude]
     # lat 52.193919  lon 5.303260
     return df.loc[(df['lat'] >= bounds[0][0]) & (df['lat'] < bounds[0][1]) &
-    (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])][['id','lat','lon','tags.highway','tags.maxspeed','tags.surface']]
+    (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])][['id','lat','lon','highway','maxspeed','surface']]
 
 
 def generateLookup(df:pd.DataFrame):
@@ -223,29 +235,11 @@ def generateLookup(df:pd.DataFrame):
     return nodeLookup
 
 
-def waytypeToSpeed(_type:str):
-    if _type == 'service':
-        return 30
-    if _type == 'cycleway':
-        return 50 # moped speed
-    if _type == 'pedestrian' or 'footway' or 'path':
-        return 1
-    if _type == 'motorway_link':
-        return 80
-    if _type == 'primary':
-        return 80
-    if _type == 'secondary':
-        return 50
-    if _type == 'tertiary':
-        return 30
-    if _type == 'residential':
-        return 30
-    if _type == 'living_street':
-        return 30
-    if _type == 'unclassified':
-        return 30
+def waytypeToSpeed(roadTypeName:str):
+    if roadTypeName in conf.sim['roads']['speeds']:
+        return conf.sim['roads']['speeds'][roadTypeName]
     else:
-        Exception
+        return 30
 
 
 def effMoped(speed):
@@ -272,35 +266,37 @@ def effHeavyduty(speed):
 
 
 def generateWayEF(df:pd.DataFrame):
+    unhandled = set()
     wayLookup = {}
     for way in df.loc[df['type'] == 'way'].itertuples():
-        _type = str(way._6)
-        if(way._8):
-            speed = int(way._8)
+        _type = str(way.highway)
+        if(way.maxspeed):
+            speed = int(way.maxspeed)
         else:
             speed = waytypeToSpeed(_type)
-        
-        if _type == 'service':
+
+        if _type == 'service' or _type == 'services':
             eff, busy = (effPassenger(speed)*0.9 + effLightduty(speed)*0.1), 1
-        if _type == 'cycleway':
+        elif _type == 'cycleway':
             eff, busy = effMoped(speed), 1
-        if _type == 'pedestrian' or 'footway' or 'path':
+        elif _type == 'pedestrian' or _type == 'footway' or _type == 'path':
             eff, busy = effMoped(speed) * 0.1 , 1
-        if _type == 'motorway_link' or 'motorway' or 'highway' or 'speedway':
+        elif _type == 'motorway_link' or _type == 'motorway' or _type == 'highway' or _type == 'speedway':
             eff, busy = (effPassenger(speed)*0.55 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.25), 10
-        if _type == 'primary':
-            eff, busy = (effPassenger(speed)*0.6 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.2), 6
-        if _type == 'secondary':
+        elif _type == 'primary':
+            eff, busy = (effPassenger(speed)*0.6 + effLightduty(speed)*0.2 + effHeavyduty(speed)*0.2), 8
+        elif _type == 'secondary':
             eff, busy = (effPassenger(speed)*0.7 + effLightduty(speed)*0.15 + effHeavyduty(speed)*0.15), 5
-        if _type == 'tertiary':
+        elif _type == 'tertiary':
             eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 3
-        if _type == 'residential' or 'living_street':
+        elif _type == 'residential' or _type == 'living_street':
             eff, busy = (effPassenger(speed)*0.9 + effLightduty(speed)*0.05 + effMoped(speed) * 0.05), 1
         else:
-            print(f'ELSE: {_type}')
+            unhandled.add(_type) # way unknown
             eff, busy = (effPassenger(speed)*0.8 + effLightduty(speed)*0.1 + effHeavyduty(speed)*0.1), 2
 
         wayLookup[way.id] = {'eff':eff,'busy':busy}
+    print(f'Unhandled ways:{unhandled}')
     return wayLookup
 
 
@@ -394,7 +390,7 @@ def generateCirleCoordsList(r,start:tuple):
     return list(pointList)
 
 
-def receptorpointBasedConcentration(df:pd.DataFrame,radius,bboxSize:int = 100,roads:list = None) -> np.array:
+def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100,roads:list = None) -> np.array:
     # radius in meters
     # bboxSize in meters
     """
@@ -453,24 +449,10 @@ def receptorpointBasedConcentration(df:pd.DataFrame,radius,bboxSize:int = 100,ro
                     currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
                     lineLength = calculateDistanceM(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
                     emission = emissionfactorToEmission(lineLength/1000,EF*busyness)
-                    ret = concentration(emission,U,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],theta,(lineLength/4))
+                    ret = concentration(emission,windSpeed,centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],windAngle,(lineLength/4))
                     concentrationMatrix[rowIndex][colIndex] += ret
 
             # print(f'Receptor {total}/{concentrationMatrix.size}')
     print(f'Full setup and 1 cycle of concentration took: {time.time() - startTime}s')
     return concentrationMatrix
 
-        
-
-
-Q = 10
-U = 3 # 3 m/s average wind speed
-theta = 40 # 
-# Xr, Yr = 1800, 9200
-Xr, Yr = 1200, 9800
-X1,Y1, X2,Y2 = 1000, 9000, 2000, 10000
-
-sigZ = 4.5 # a value based on the fact that a third of every road is downwind, based on 100m between nodes
-sigY = 5   # a value based on the fact that a third of every road is downwind, based on 100m between nodes
-
-# showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2)
