@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module poll</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>poll</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="algorithm.html">algorithm</a><br>
+<a href="config.html">config</a><br>
+</td><td width="25%" valign=top><a href="draw.html">draw</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="pandas.html">pandas</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
+<a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-boundBasedConcentration"><strong>boundBasedConcentration</strong></a>(df: pandas.core.frame.DataFrame) -&gt; &lt;built-in function array&gt;</dt><dd><tt>Calculate&nbsp;the&nbsp;concentration&nbsp;based&nbsp;on&nbsp;a&nbsp;boundingbox&nbsp;system,&nbsp;with&nbsp;a&nbsp;receptor&nbsp;point&nbsp;in&nbsp;the&nbsp;center&nbsp;of&nbsp;each&nbsp;boundingbox.<br>
+WARNING:&nbsp;the&nbsp;function&nbsp;has&nbsp;a&nbsp;static&nbsp;concentration&nbsp;of&nbsp;10.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;concentrationMatrix&nbsp;(list):&nbsp;a&nbsp;matrix&nbsp;with&nbsp;at&nbsp;each&nbsp;cell&nbsp;a&nbsp;particular&nbsp;concentration.</tt></dd></dl>
+ <dl><dt><a name="-calculateDistanceKm"><strong>calculateDistanceKm</strong></a>(lat1, lat2, lon1, lon2)</dt><dd><tt>Calculate&nbsp;the&nbsp;distance&nbsp;between&nbsp;two&nbsp;longitude&nbsp;and&nbsp;latitude&nbsp;points&nbsp;in&nbsp;kilometers.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat1&nbsp;(float):&nbsp;latitude&nbsp;line&nbsp;of&nbsp;the&nbsp;fist&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat2&nbsp;(float):&nbsp;latitude&nbsp;line&nbsp;of&nbsp;the&nbsp;second&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon1&nbsp;(float):&nbsp;longitude&nbsp;line&nbsp;of&nbsp;the&nbsp;fist&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon2&nbsp;(float):&nbsp;longitude&nbsp;line&nbsp;of&nbsp;the&nbsp;second&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance&nbsp;(int):&nbsp;The&nbsp;distance&nbsp;between&nbsp;the&nbsp;two&nbsp;points&nbsp;in&nbsp;kilometers.</tt></dd></dl>
+ <dl><dt><a name="-calculateDistanceM"><strong>calculateDistanceM</strong></a>(lat1, lat2, lon1, lon2)</dt><dd><tt>Calculate&nbsp;the&nbsp;distance&nbsp;between&nbsp;two&nbsp;longitude&nbsp;and&nbsp;latitude&nbsp;points&nbsp;in&nbsp;meters.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat1&nbsp;(float):&nbsp;latitude&nbsp;line&nbsp;of&nbsp;the&nbsp;fist&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat2&nbsp;(float):&nbsp;latitude&nbsp;line&nbsp;of&nbsp;the&nbsp;second&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon1&nbsp;(float):&nbsp;longitude&nbsp;line&nbsp;of&nbsp;the&nbsp;fist&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon2&nbsp;(float):&nbsp;longitude&nbsp;line&nbsp;of&nbsp;the&nbsp;second&nbsp;point.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance&nbsp;(int):&nbsp;The&nbsp;distance&nbsp;between&nbsp;the&nbsp;two&nbsp;points&nbsp;in&nbsp;meters.</tt></dd></dl>
+ <dl><dt><a name="-effHeavyduty"><strong>effHeavyduty</strong></a>(speed)</dt><dd><tt>Calculate&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;for&nbsp;heavy&nbsp;duty&nbsp;vehicles&nbsp;&lt;3.5&nbsp;t&nbsp;in&nbsp;grams&nbsp;per&nbsp;kilometer&nbsp;depending&nbsp;on&nbsp;the&nbsp;speed.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;speed&nbsp;(int):&nbsp;the&nbsp;speed&nbsp;of&nbsp;the&nbsp;vehicle<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;effectiveness&nbsp;factor&nbsp;(int):&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;determined&nbsp;by&nbsp;the&nbsp;EU.</tt></dd></dl>
+ <dl><dt><a name="-effLightduty"><strong>effLightduty</strong></a>(speed)</dt><dd><tt>Calculate&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;for&nbsp;light&nbsp;duty&nbsp;vehicles&nbsp;&lt;3.5&nbsp;t&nbsp;in&nbsp;grams&nbsp;per&nbsp;kilometer&nbsp;depending&nbsp;on&nbsp;the&nbsp;speed.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;speed&nbsp;(int):&nbsp;the&nbsp;speed&nbsp;of&nbsp;the&nbsp;vehicle<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;effectiveness&nbsp;factor&nbsp;(int):&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;determined&nbsp;by&nbsp;the&nbsp;EU.</tt></dd></dl>
+ <dl><dt><a name="-effMoped"><strong>effMoped</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;for&nbsp;mopeds&nbsp;in&nbsp;grams&nbsp;per&nbsp;kilometer.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;effectiveness&nbsp;factor&nbsp;(int):&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;determined&nbsp;by&nbsp;the&nbsp;EU.</tt></dd></dl>
+ <dl><dt><a name="-effPassenger"><strong>effPassenger</strong></a>(speed)</dt><dd><tt>Calculate&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;for&nbsp;passenger&nbsp;cars&nbsp;in&nbsp;grams&nbsp;per&nbsp;kilometer&nbsp;depending&nbsp;on&nbsp;the&nbsp;speed.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;speed&nbsp;(int):&nbsp;the&nbsp;speed&nbsp;of&nbsp;the&nbsp;vehicle<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;effectiveness&nbsp;factor&nbsp;(int):&nbsp;the&nbsp;effectiveness&nbsp;factor&nbsp;determined&nbsp;by&nbsp;the&nbsp;EU.</tt></dd></dl>
+ <dl><dt><a name="-emissionfactorToEmission"><strong>emissionfactorToEmission</strong></a>(distance, EF)</dt><dd><tt>Calculates&nbsp;the&nbsp;emmissions&nbsp;per&nbsp;unit&nbsp;length<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance&nbsp;(int):&nbsp;A&nbsp;string&nbsp;of&nbsp;coordinates&nbsp;split&nbsp;by&nbsp;a&nbsp;space,&nbsp;order&nbsp;from&nbsp;bottom,left,top,right.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;EF&nbsp;(int):&nbsp;emission&nbsp;factor,&nbsp;a&nbsp;factor&nbsp;to&nbsp;determine&nbsp;the&nbsp;emissions&nbsp;this&nbsp;time&nbsp;represented&nbsp;as&nbsp;grams&nbsp;per&nbsp;distance&nbsp;(kilometer)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;emissions&nbsp;(int):&nbsp;The&nbsp;emissions&nbsp;per&nbsp;unit&nbsp;length.</tt></dd></dl>
+ <dl><dt><a name="-emissionfactorToReducedEmission"><strong>emissionfactorToReducedEmission</strong></a>(distance, EF, ER)</dt><dd><tt>Calculates&nbsp;the&nbsp;emmissions&nbsp;per&nbsp;unit&nbsp;length<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;distance&nbsp;(int):&nbsp;A&nbsp;string&nbsp;of&nbsp;coordinates&nbsp;split&nbsp;by&nbsp;a&nbsp;space,&nbsp;order&nbsp;from&nbsp;bottom,left,top,right.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;EF&nbsp;(int):&nbsp;emission&nbsp;factor,&nbsp;a&nbsp;factor&nbsp;to&nbsp;determine&nbsp;the&nbsp;emissions&nbsp;this&nbsp;time&nbsp;represented&nbsp;as&nbsp;grams&nbsp;per&nbsp;distance&nbsp;(kilometer).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ER&nbsp;(int):&nbsp;emission&nbsp;reduction&nbsp;factor.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;emissions&nbsp;(int):&nbsp;The&nbsp;emissions&nbsp;per&nbsp;unit&nbsp;length&nbsp;after&nbsp;emission&nbsp;reduction.</tt></dd></dl>
+ <dl><dt><a name="-generateCirleCoordsList"><strong>generateCirleCoordsList</strong></a>(r, start: tuple)</dt><dd><tt>Create&nbsp;a&nbsp;list&nbsp;of&nbsp;perimiter&nbsp;coordinates&nbsp;for&nbsp;a&nbsp;circle&nbsp;given&nbsp;a&nbsp;radius&nbsp;and&nbsp;a&nbsp;starting&nbsp;point.&nbsp;<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r&nbsp;(list):&nbsp;The&nbsp;radius&nbsp;in&nbsp;coordinates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start&nbsp;(tuple):&nbsp;an&nbsp;x&nbsp;&amp;&nbsp;y&nbsp;starting&nbsp;value.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pointlist&nbsp;(list):&nbsp;Returns&nbsp;a&nbsp;list&nbsp;with&nbsp;perimiter&nbsp;of&nbsp;a&nbsp;circle.</tt></dd></dl>
+ <dl><dt><a name="-generateIndexListFromCircumference"><strong>generateIndexListFromCircumference</strong></a>(coords: list)</dt><dd><tt>Create&nbsp;a&nbsp;list&nbsp;of&nbsp;indexes&nbsp;from&nbsp;a&nbsp;list&nbsp;of&nbsp;coordinates&nbsp;form&nbsp;a&nbsp;shape&nbsp;with&nbsp;a&nbsp;start&nbsp;and&nbsp;en&nbsp;end&nbsp;every&nbsp;row.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;coords&nbsp;(list):&nbsp;A&nbsp;list&nbsp;of&nbsp;indexes&nbsp;with&nbsp;a&nbsp;shape&nbsp;recognizable&nbsp;per&nbsp;row.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outList&nbsp;(list):&nbsp;Returns&nbsp;a&nbsp;list&nbsp;with&nbsp;the&nbsp;complete&nbsp;surface.</tt></dd></dl>
+ <dl><dt><a name="-generateLookup"><strong>generateLookup</strong></a>(df: pandas.core.frame.DataFrame)</dt><dd><tt>Creates&nbsp;a&nbsp;lookup&nbsp;table&nbsp;where&nbsp;the&nbsp;key&nbsp;is&nbsp;a&nbsp;nodeId's&nbsp;as&nbsp;keys&nbsp;and&nbsp;as&nbsp;value&nbsp;another&nbsp;dict&nbsp;with&nbsp;the&nbsp;corrosponding&nbsp;waysId's&nbsp;and&nbsp;order&nbsp;number.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nodeLookup(dict):&nbsp;A&nbsp;dictionary&nbsp;with&nbsp;all&nbsp;nodeId's&nbsp;as&nbsp;keys&nbsp;and&nbsp;as&nbsp;value&nbsp;another&nbsp;dict&nbsp;with&nbsp;the&nbsp;corrosponding&nbsp;waysId's&nbsp;and&nbsp;order&nbsp;number.</tt></dd></dl>
+ <dl><dt><a name="-generateWayEF"><strong>generateWayEF</strong></a>(df: pandas.core.frame.DataFrame)</dt><dd><tt>Compose&nbsp;the&nbsp;emmisionfactor&nbsp;depending&nbsp;on&nbsp;the&nbsp;speed&nbsp;and&nbsp;composition&nbsp;of&nbsp;cars&nbsp;and&nbsp;bussyness&nbsp;of&nbsp;the&nbsp;particular&nbsp;road.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;waysToFactor&nbsp;(dict):&nbsp;Returns&nbsp;a&nbsp;dictionary&nbsp;with&nbsp;the&nbsp;emission&nbsp;factor&nbsp;and&nbsp;bussyness&nbsp;offset.</tt></dd></dl>
+ <dl><dt><a name="-getBoundsNodelist"><strong>getBoundsNodelist</strong></a>(df, matrixShape, lon_min, lon_max, lat_min, lat_max)</dt><dd><tt>Create&nbsp;a&nbsp;3D&nbsp;frame&nbsp;of&nbsp;a&nbsp;predetermined&nbsp;size&nbsp;with&nbsp;all&nbsp;the&nbsp;nodes&nbsp;in&nbsp;those&nbsp;bounds&nbsp;from&nbsp;a&nbsp;dataframe,&nbsp;with&nbsp;a&nbsp;predetermined&nbsp;shape.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;matrixShape&nbsp;(tuple):&nbsp;a&nbsp;2&nbsp;long&nbsp;tuple&nbsp;with&nbsp;row&nbsp;and&nbsp;column&nbsp;count.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon_min&nbsp;(float):&nbsp;start&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;longitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon_max&nbsp;(float):&nbsp;end&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;longitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat_min&nbsp;(float):&nbsp;start&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;latitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat_max&nbsp;(float):&nbsp;end&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;latitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bounds&nbsp;(3D&nbsp;list[x,y,z]):&nbsp;a&nbsp;matrix&nbsp;with&nbsp;a&nbsp;particular&nbsp;size&nbsp;with&nbsp;per&nbsp;cell&nbsp;a&nbsp;list&nbsp;of&nbsp;nodes&nbsp;that&nbsp;belong&nbsp;there.</tt></dd></dl>
+ <dl><dt><a name="-getBoundsRanges"><strong>getBoundsRanges</strong></a>(matrixShape, lon_min, lon_max, lat_min, lat_max)</dt><dd><tt>Create&nbsp;a&nbsp;2D&nbsp;frame&nbsp;of&nbsp;a&nbsp;predetermined&nbsp;size&nbsp;with&nbsp;longitude&nbsp;&amp;&nbsp;latitude&nbsp;bounds&nbsp;as&nbsp;values.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;matrixShape&nbsp;(tuple):&nbsp;a&nbsp;2&nbsp;long&nbsp;tuple&nbsp;with&nbsp;row&nbsp;and&nbsp;column&nbsp;count.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon_min&nbsp;(float):&nbsp;start&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;longitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lon_max&nbsp;(float):&nbsp;end&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;longitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat_min&nbsp;(float):&nbsp;start&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;latitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lat_max&nbsp;(float):&nbsp;end&nbsp;of&nbsp;the&nbsp;boundingbox&nbsp;as&nbsp;latitude<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bounds&nbsp;(3D&nbsp;list[x,x,2,2]):&nbsp;a&nbsp;matrix&nbsp;with&nbsp;for&nbsp;each&nbsp;cell&nbsp;2&nbsp;rows&nbsp;of&nbsp;min&nbsp;and&nbsp;max&nbsp;values&nbsp;of&nbsp;that&nbsp;particulair&nbsp;bound.</tt></dd></dl>
+ <dl><dt><a name="-getMinMaxDataframe"><strong>getMinMaxDataframe</strong></a>(df: pandas.core.frame.DataFrame) -&gt; tuple</dt><dd><tt>Get&nbsp;the&nbsp;outer&nbsp;values&nbsp;of&nbsp;longitude&nbsp;and&nbsp;latitude&nbsp;form&nbsp;a&nbsp;dataframe.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outer&nbsp;(tuple):&nbsp;min&nbsp;longitude,&nbsp;max&nbsp;longitude,&nbsp;min&nbsp;latitude,&nbsp;max&nbsp;latitude.</tt></dd></dl>
+ <dl><dt><a name="-getNodesInBoundsByIndex"><strong>getNodesInBoundsByIndex</strong></a>(nodesInBounds, coords)</dt><dd><tt>Create&nbsp;a&nbsp;list&nbsp;of&nbsp;lists&nbsp;with&nbsp;nodes.<br>
+&nbsp;<br>
+Parameter:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nodesInBounds&nbsp;(list):&nbsp;A&nbsp;3D&nbsp;matix&nbsp;with&nbsp;in&nbsp;each&nbsp;cell&nbsp;a&nbsp;list&nbsp;of&nbsp;nodes<br>
+&nbsp;&nbsp;&nbsp;&nbsp;coords&nbsp;(list):&nbsp;A&nbsp;list&nbsp;of&nbsp;list&nbsp;consiting&nbsp;of&nbsp;2&nbsp;values&nbsp;(row,&nbsp;col)&nbsp;the&nbsp;matrix&nbsp;coordinates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outList&nbsp;(list):&nbsp;Returns&nbsp;a&nbsp;list&nbsp;with&nbsp;the&nbsp;complete&nbsp;surface.</tt></dd></dl>
+ <dl><dt><a name="-getNodesInBoundsFromDf"><strong>getNodesInBoundsFromDf</strong></a>(df: pandas.core.frame.DataFrame, bounds: list)</dt><dd><tt>Search&nbsp;for&nbsp;all&nbsp;the&nbsp;nodes&nbsp;that&nbsp;belong&nbsp;between&nbsp;a&nbsp;4&nbsp;bounding&nbsp;lines.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bounds&nbsp;(list):&nbsp;2&nbsp;rows&nbsp;with&nbsp;each&nbsp;2&nbsp;values,&nbsp;row1&nbsp;latitudes,&nbsp;row2&nbsp;longitudes.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nodesInBound(Series):&nbsp;A&nbsp;series&nbsp;object&nbsp;with&nbsp;all&nbsp;the&nbsp;nodes&nbsp;an&nbsp;their&nbsp;atributes.</tt></dd></dl>
+ <dl><dt><a name="-receptorpointBasedConcentration"><strong>receptorpointBasedConcentration</strong></a>(df: pandas.core.frame.DataFrame, windSpeed: int, windAngle: int, radius: int, bboxSize: int = 100) -&gt; &lt;built-in function array&gt;</dt><dd><tt>Calculate&nbsp;the&nbsp;concentration&nbsp;based&nbsp;on&nbsp;the&nbsp;receptorpoints,&nbsp;taking&nbsp;in&nbsp;account&nbsp;different&nbsp;regions&nbsp;based&nbsp;on&nbsp;the&nbsp;radius.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;(Pandas.DataFrame):&nbsp;Map&nbsp;data&nbsp;with&nbsp;nodes&nbsp;and&nbsp;ways.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;windSpeed&nbsp;(int):&nbsp;The&nbsp;windspeed&nbsp;in&nbsp;units&nbsp;per&nbsp;time.&nbsp;(meters/second)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;windAngle&nbsp;(int):&nbsp;The&nbsp;windangle&nbsp;form&nbsp;-89&nbsp;to&nbsp;90.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;radius&nbsp;(int):&nbsp;The&nbsp;radius&nbsp;aroung&nbsp;each&nbsp;receptor&nbsp;point&nbsp;to&nbsp;take&nbsp;in&nbsp;account.&nbsp;(meters)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;bboxSize&nbsp;(int):&nbsp;The&nbsp;size&nbsp;of&nbsp;the&nbsp;bounding&nbsp;boxes&nbsp;in&nbsp;height&nbsp;and&nbsp;width.&nbsp;Standard&nbsp;100&nbsp;(meters)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;concentrationMatrix&nbsp;(list):&nbsp;a&nbsp;matrix&nbsp;with&nbsp;at&nbsp;each&nbsp;cell&nbsp;a&nbsp;particular&nbsp;concentration.</tt></dd></dl>
+ <dl><dt><a name="-showWindAngleImpact"><strong>showWindAngleImpact</strong></a>(Q, U, Xr, Yr, X1, Y1, X2, Y2)</dt><dd><tt>Shows&nbsp;the&nbsp;imact&nbsp;wind&nbsp;angles&nbsp;have<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Q&nbsp;(int):&nbsp;The&nbsp;amount&nbsp;of&nbsp;mass&nbsp;per&nbsp;unit&nbsp;length&nbsp;in&nbsp;time<br>
+&nbsp;&nbsp;&nbsp;&nbsp;U&nbsp;(int):&nbsp;Windspeed&nbsp;in&nbsp;unit&nbsp;length&nbsp;per&nbsp;time<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Xr&nbsp;(int):&nbsp;Receptor&nbsp;point&nbsp;X&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Yr&nbsp;(int):&nbsp;Receptor&nbsp;point&nbsp;Y&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;X1&nbsp;(int):&nbsp;Start&nbsp;of&nbsp;the&nbsp;line&nbsp;source&nbsp;X&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y1&nbsp;(int):&nbsp;Start&nbsp;of&nbsp;the&nbsp;line&nbsp;source&nbsp;Y&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;X2&nbsp;(int):&nbsp;End&nbsp;of&nbsp;the&nbsp;line&nbsp;source&nbsp;X&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Y2&nbsp;(int):&nbsp;End&nbsp;of&nbsp;the&nbsp;line&nbsp;source&nbsp;Y&nbsp;coordinate<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None:&nbsp;Shows&nbsp;a&nbsp;figure&nbsp;of&nbsp;the&nbsp;impact&nbsp;of&nbsp;the&nbsp;wind&nbsp;angle.</tt></dd></dl>
+ <dl><dt><a name="-waytypeToSpeed"><strong>waytypeToSpeed</strong></a>(roadTypeName: str)</dt><dd><tt>A&nbsp;fallback&nbsp;function&nbsp;to&nbsp;determing&nbsp;typical&nbsp;speeds&nbsp;for&nbsp;roads&nbsp;that&nbsp;have&nbsp;no&nbsp;meta-data.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;roadTypeName&nbsp;(str):&nbsp;The&nbsp;type&nbsp;of&nbsp;road,&nbsp;usually&nbsp;specified&nbsp;under&nbsp;the&nbsp;tags.highway/highway&nbsp;column.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;speed&nbsp;(int):&nbsp;returns&nbsp;a&nbsp;set&nbsp;or&nbsp;fallback&nbsp;speed&nbsp;for&nbsp;a&nbsp;particular&nbsp;road&nbsp;type.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__warningregistry__</strong> = {'version': 12}</td></tr></table>
+</body></html>

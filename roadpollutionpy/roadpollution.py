@@ -114,7 +114,7 @@ inputToFunction = {
     "quit": quit
 }
 
-if __name__ == "main":
+if __name__ == "__main__":
     while True:
         try:
             selection = str(
