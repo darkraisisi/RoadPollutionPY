@@ -6,9 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import config as conf
-import draw
-import algorithm as algo
+if (__name__ == 'poll'):
+    import config as conf
+    import draw
+    import algorithm as algo
+else:
+    from roadpollutionpy import config as conf
+    from roadpollutionpy import draw
+    from roadpollutionpy import algorithm as algo 
 
 
 """
@@ -499,7 +504,7 @@ def generateCirleCoordsList(r,start:tuple):
     Create a list of perimiter coordinates for a circle given a radius and a starting point. 
 
     Parameter:
-        r (list): The radius in coordinates.
+        r (int): The radius in coordinates.
         start (tuple): an x & y starting value.
         
     Returns:

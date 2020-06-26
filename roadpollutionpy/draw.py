@@ -6,8 +6,10 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
-import config as conf
+if (__name__ == 'draw'):
+    import config as conf
+else:
+    from roadpollutionpy import config as conf
 
 
 def readFromFile(name) -> pd.DataFrame:

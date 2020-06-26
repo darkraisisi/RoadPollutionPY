@@ -31,7 +31,9 @@ All the important things are located under the folder `roadpollutionpy/`.
 ## Running
 To run a simulation i suggest you to run it from a relative position like: `C:/Python383/python.exe "C:/path/to/repo/RoadPollutionPY/roadpollutionpy/roadpollution.py"`
 
+To run a test: `C:/Python383/python.exe -m pytest .\test_algorithm.py`
+
 
 # Troubleshooting
 Problems with saving or reading maps?<br>
-Check if the folders `maps/norm/` are present, check the config for path variables 
+Check if the folders `maps/norm/` are present, check the config for path variables
