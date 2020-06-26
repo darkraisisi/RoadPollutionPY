@@ -9,7 +9,7 @@ from roadpollutionpy import algorithm as algo
 
 
 def test_concentration():
-    # This test shows the behaivior explained in the sources abount this model.
+    # This test shows the behavior explained in the sources abount this model.
     Q = 10
     U = 3 # 3 m/s average wind speed
     # Xr, Yr = 1800, 9200
