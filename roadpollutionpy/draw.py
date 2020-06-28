@@ -79,7 +79,7 @@ def imagePlot(matrix, name, bboxSize, radius):
         None: Shows a figure
     """
     plt.imshow(matrix, cmap='hot', interpolation='quadric')
-    plt.colorbar()
+    plt.colorbar().ax.set_ylabel('g/m^3', rotation=270)
     plt.xlabel('longitude')
     plt.ylabel('latitude')
     plt.title(f'{name} bbox{bboxSize}_R{radius}')
