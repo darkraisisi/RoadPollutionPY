@@ -12,7 +12,7 @@ def simulateCurrentConcentration():
     Parameters:
         name (str): conf.sim["current"], name of your file.
         windSpeed (int): conf.sim["wind_speed"], windspeed in unit distance.
-        windAngle (int): conf.sim["wind_angle"], relative windangle from -89 to 90.
+        windAngle (int): conf.sim["relative_wind_angle"], relative windangle from -89 to 90.
         bboxSize (int): conf.sim["bbox_size"], Bounding box size in unit length.
         radius (int): conf.sim["radius"], radius aroung a receptor in unit length.
         
@@ -22,7 +22,7 @@ def simulateCurrentConcentration():
     name = conf.sim["current"]
     
     windSpeed = conf.sim["wind_speed"]
-    windAngle = conf.sim["wind_angle"]
+    windAngle = conf.sim["relative_wind_angle"]
     bboxSize = conf.sim["bbox_size"]
     radius = conf.sim["radius"]
 
@@ -39,7 +39,7 @@ def simulateCurrentConcentrationAndRoads():
     Parameters:
         name (str): conf.sim["current"], name of your file.
         windSpeed (int): conf.sim["wind_speed"], windspeed in unit distance.
-        windAngle (int): conf.sim["wind_angle"], relative windangle from -89 to 90.
+        windAngle (int): conf.sim["relative_wind_angle"], relative windangle from -89 to 90.
         bboxSize (int): conf.sim["bbox_size"], Bounding box size in unit length.
         radius (int): conf.sim["radius"], radius aroung a receptor in unit length.
         
@@ -49,7 +49,7 @@ def simulateCurrentConcentrationAndRoads():
     name = conf.sim["current"]
     
     windSpeed = conf.sim["wind_speed"]
-    windAngle = conf.sim["wind_angle"]
+    windAngle = conf.sim["relative_wind_angle"]
     bboxSize = conf.sim["bbox_size"]
     radius = conf.sim["radius"]
     roads = conf.draw["roads"]

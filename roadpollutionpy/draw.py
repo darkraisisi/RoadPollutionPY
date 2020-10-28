@@ -25,7 +25,6 @@ def readFromFile(name) -> pd.DataFrame:
     if(conf.draw['verbose']):
         print(conf.draw['path'])
     df = pd.json_normalize(pd.read_json(conf.draw['path'],typ='series', dtype=object))
-    df.set_index('id')
     return df
 
 

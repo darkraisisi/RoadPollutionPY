@@ -199,6 +199,37 @@ def getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max):
     return bounds
 
 
+# def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
+#     """
+#     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
+
+#     Parameters:
+#         df (Pandas.DataFrame): Map data with nodes and ways.
+#         matrixShape (tuple): a 2 long tuple with row and column count.
+#         lon_min (float): start of the boundingbox as longitude
+#         lon_max (float): end of the boundingbox as longitude
+#         lat_min (float): start of the boundingbox as latitude
+#         lat_max (float): end of the boundingbox as latitude
+        
+#     Returns:
+#         bounds (3D list[x,y,z]): a matrix with a particular size with per cell a list of nodes that belong there.
+#     """
+#     boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
+#     nodesInBounds = []
+#     for rowIndex in range(0, matrixShape[0]):
+#         nodesInBounds.append([]) # Add a new row
+#         row = boundsRange[rowIndex][0][0] 
+#         dfHorRow = df.loc[
+#             (df['lat'] >= row[0]) & 
+#             (df['lat'] < row[1])]
+#         for columIndex in range(0, matrixShape[1]):
+#             nodesInBounds[rowIndex].append([]) # Add a column to the row
+#             nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
+#             nodes.set_index('id')
+#             nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
+#     return nodesInBounds
+
+
 def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     """
     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
@@ -216,14 +247,23 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     """
     boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
     nodesInBounds = []
+    df.sort_values(by=['lat','lon'],inplace=True)
+    df.reset_index(inplace=True)
+    print(df.head())
     for rowIndex in range(0, matrixShape[0]):
         nodesInBounds.append([]) # Add a new row
+        row = boundsRange[rowIndex][0][0]
+        minLat = df.index[df['lat'] >= row[0]].min()
+        maxLat = df.index[df['lat'] < row[1]].max()
+        dfHorRow = df.iloc[minLat-1:maxLat+1]
         for columIndex in range(0, matrixShape[1]):
             nodesInBounds[rowIndex].append([]) # Add a column to the row
-            nodes = getNodesInBoundsFromDf(df,boundsRange[rowIndex][columIndex])
-            nodes.set_index('id')
-            nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
-    return nodesInBounds
+            nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
+            x = list(nodes.to_dict('records'))
+            # print(minLat,maxLat,boundsRange[rowIndex][columIndex][1])
+            # print(x)
+            nodesInBounds[rowIndex][columIndex] = x
+    return np.asarray(nodesInBounds)
 
 
 def boundBasedConcentration(df:pd.DataFrame) -> np.array:
@@ -278,7 +318,7 @@ def boundBasedConcentration(df:pd.DataFrame) -> np.array:
                         j+=1
                         currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
                         lineLength = calculateDistanceKm(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
-                        ret = algo.concentration(10,conf.sim['wind_speed'],centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],conf.sim['wind_angle'],(lineLength/4))
+                        ret = algo.concentration(10,conf.sim['wind_speed'],centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],conf.sim['relative_wind_angle'],(lineLength/4))
                         matrix[rowIndex][columIndex] += ret
 
                 # print(f'Amount of bounds calculated:{i}')
@@ -288,7 +328,7 @@ def boundBasedConcentration(df:pd.DataFrame) -> np.array:
     return matrix
 
 
-def getNodesInBoundsFromDf(df:pd.DataFrame,bounds:list):
+def getNodesInBoundsFromDf(_df:pd.DataFrame,bounds:list):
     """
     Search for all the nodes that belong between a 4 bounding lines.
 
@@ -302,13 +342,12 @@ def getNodesInBoundsFromDf(df:pd.DataFrame,bounds:list):
     # bounds[0] = [start latitude, end latitude line]
     # bounds[1] = [start longitude, end longitude]
 
-    return df.loc[(df['lat'] >= bounds[0][0]) & (df['lat'] < bounds[0][1]) &
-    (df['lon'] >= bounds[1][0]) & (df['lon'] < bounds[1][1])][['id','lat','lon','highway','maxspeed','surface']]
+    return _df[(_df['lon'] >= bounds[1][0]) & (_df['lon'] < bounds[1][1])][['id','lat','lon','highway','maxspeed','surface']]
 
 
 def generateLookup(df:pd.DataFrame):
     """
-    Creates a lookup table where the key is a nodeId's as keys and as value another dict with the corrosponding waysId's and order number.
+    Creates a lookup table where the key is a nodeId's and as value another dict with the corrosponding waysId's and order number.
 
     Parameters:
         df (Pandas.DataFrame): Map data with nodes and ways.
@@ -446,7 +485,7 @@ def generateWayEF(df:pd.DataFrame):
     return wayLookup
 
 
-def generateIndexListFromCircumference(coords:list):
+def generateIndexListFromCircumference(coords:list,shape:tuple) -> np.ndarray: 
     """
     Create a list of indexes from a list of coordinates form a shape with a start and en end every row.
 
@@ -456,13 +495,24 @@ def generateIndexListFromCircumference(coords:list):
     Returns:
         outList (list): Returns a list with the complete surface.
     """
+    rows = shape[0]
+    cols = shape[1]
+
     startRow = min(coords,key=itemgetter(0))[0]
     endRow = max(coords,key=itemgetter(0))[0]
     startCol = min(coords,key=itemgetter(1))[1]
     endCol = max(coords,key=itemgetter(1))[1]
 
-    outList = []
+    if startRow < 0:
+        startRow = 0
+    if startCol < 0:
+        startCol = 0
+    if endRow >= rows:
+        endRow = rows-1
+    if endCol >= cols:
+        endCol = cols-1
 
+    outList = []
     inside = False
     for rowIndex in range(startRow,endRow+1):
         inside = False
@@ -470,13 +520,13 @@ def generateIndexListFromCircumference(coords:list):
 
             if((rowIndex,colIndex) in coords):
                 inside = not inside
-                outList.append((rowIndex,colIndex))
+                outList.append([rowIndex,colIndex])
                 continue
 
             if(inside):
-                outList.append((rowIndex,colIndex))
-            
-    return outList
+                outList.append([rowIndex,colIndex])
+
+    return np.asarray(outList)
 
 
 def getNodesInBoundsByIndex(nodesInBounds,coords):
@@ -488,15 +538,11 @@ def getNodesInBoundsByIndex(nodesInBounds,coords):
         coords (list): A list of list consiting of 2 values (row, col) the matrix coordinates.
         
     Returns:
-        outList (list): Returns a list with the complete surface.
+        outList (list): Returns a list with the requested surface.
     """
-    retNodes = []
-    for coord in coords:
-        if coord[0] in range(-len(nodesInBounds), len(nodesInBounds)):
-            if coord[1] in range(-len(nodesInBounds[coord[0]]), len(nodesInBounds[coord[0]])):
-                retNodes.append(nodesInBounds[coord[0]][coord[1]])
-
-    return retNodes
+    rows = coords[:,0]
+    cols = coords[:,1]
+    return nodesInBounds[[rows,cols]]
 
 
 def generateCirleCoordsList(r,start:tuple):
@@ -622,7 +668,6 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
     concentrationMatrix = np.zeros(
         (math.ceil(latInKm/bboxSize),math.ceil(lonInKm/bboxSize))
     )
-
     nodeToWays = generateLookup(df)
     wayIdToInfo = generateWayEF(df)
     nodesInBounds = getBoundsNodelist(df,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
@@ -637,7 +682,7 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
             total +=1
             centerLon = lon_min + (lonFreq * colIndex)
             circumference = generateCirleCoordsList(int(radius/bboxSize)-1,(rowIndex,colIndex))
-            areaList = generateIndexListFromCircumference(circumference)
+            areaList = generateIndexListFromCircumference(circumference,nodesInBounds.shape)
             nodesList = getNodesInBoundsByIndex(nodesInBounds,areaList)
             currentWaysId = {}
             for nodes in nodesList:
