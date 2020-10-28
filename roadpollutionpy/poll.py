@@ -199,37 +199,6 @@ def getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max):
     return bounds
 
 
-# def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
-#     """
-#     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
-
-#     Parameters:
-#         df (Pandas.DataFrame): Map data with nodes and ways.
-#         matrixShape (tuple): a 2 long tuple with row and column count.
-#         lon_min (float): start of the boundingbox as longitude
-#         lon_max (float): end of the boundingbox as longitude
-#         lat_min (float): start of the boundingbox as latitude
-#         lat_max (float): end of the boundingbox as latitude
-        
-#     Returns:
-#         bounds (3D list[x,y,z]): a matrix with a particular size with per cell a list of nodes that belong there.
-#     """
-#     boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
-#     nodesInBounds = []
-#     for rowIndex in range(0, matrixShape[0]):
-#         nodesInBounds.append([]) # Add a new row
-#         row = boundsRange[rowIndex][0][0] 
-#         dfHorRow = df.loc[
-#             (df['lat'] >= row[0]) & 
-#             (df['lat'] < row[1])]
-#         for columIndex in range(0, matrixShape[1]):
-#             nodesInBounds[rowIndex].append([]) # Add a column to the row
-#             nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
-#             nodes.set_index('id')
-#             nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
-#     return nodesInBounds
-
-
 def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     """
     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
@@ -249,7 +218,6 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     nodesInBounds = []
     df.sort_values(by=['lat','lon'],inplace=True)
     df.reset_index(inplace=True)
-    print(df.head())
     for rowIndex in range(0, matrixShape[0]):
         nodesInBounds.append([]) # Add a new row
         row = boundsRange[rowIndex][0][0]
@@ -260,8 +228,6 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
             nodesInBounds[rowIndex].append([]) # Add a column to the row
             nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
             x = list(nodes.to_dict('records'))
-            # print(minLat,maxLat,boundsRange[rowIndex][columIndex][1])
-            # print(x)
             nodesInBounds[rowIndex][columIndex] = x
     return np.asarray(nodesInBounds)
 
@@ -650,7 +616,6 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
         centerLat, (float(currNode['lat'])+float(nextNode['lat']))/2,
         centerLon,(float(currNode['lon'])+float(nextNode['lon']))/2)
     """
-
     startTime = time.time()
     total = 0
     downWindFrac = conf.sim['downwind']
