@@ -23,7 +23,8 @@ sim = {
     "verbose": False,
     "bbox_size": 50, # Meters.
     "radius": 300, # Meters.
-    "wind_angle": 40, # Keep this parameter between -89 and 89 as it is relative to the road.
+    "actual_wind_angle": 50, # Actual windAngle 0-360.
+    "relative_wind_angle": 0,
     "wind_speed": 3, # Meters/second.
     "downwind": 0.25, # Hardcoded fraction, part of the road that is down wind from the receptor point.
     "roads": {
@@ -60,3 +61,15 @@ draw = {
     "roads": None, # List of roadTypeNames to draw.
     "path":osm["normalisation"]["path"]+sim["current"]+osm["extension"]
 }
+
+def calcWindAngle(act):
+    # 0-180
+    if (act >= 0 and act < 180):
+        return 90 - act
+    elif (act >= 180 and act < 360):
+        return act - 270
+
+def init():
+    sim.update({"relative_wind_angle":calcWindAngle(sim["actual_wind_angle"])})
+
+init()

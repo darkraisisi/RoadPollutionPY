@@ -565,6 +565,24 @@ def generateCirleCoordsList(r,start:tuple):
     return list(pointList)
 
 
+def compareAngles(roadAngle):
+    if (conf.sim["actual_wind_angle"] >= 0 and conf.sim["actual_wind_angle"] < 180):
+        # return conf.sim["actual_wind_angle"] + roadAngle
+        return (roadAngle - conf.sim["actual_wind_angle"])
+    elif (conf.sim["actual_wind_angle"] >= 180 and conf.sim["actual_wind_angle"] < 360):
+        Exception
+        return conf.sim["actual_wind_angle"] + roadAngle
+
+
+def nodesToAngle(node1, node2):
+    opp = node1['lat'] - node2['lat']
+    adj = node1['lon'] - node2['lon']
+    if (adj == 0):
+        adj = 0.000001
+    diff = opp/adj
+    return math.degrees(math.atan(diff))
+
+
 def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100) -> np.array:
     """
     Calculate the concentration based on the receptorpoints, taking in account different regions based on the radius.
