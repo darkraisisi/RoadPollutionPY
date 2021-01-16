@@ -26,8 +26,9 @@ def simulateCurrentConcentration():
     bboxSize = conf.sim["bbox_size"]
     radius = conf.sim["radius"]
 
-    mapData = draw.readFromFile(name)
-    concentrationMatrix = poll.receptorpointBasedConcentration(mapData,windSpeed,windAngle,radius,bboxSize)
+    nodes = api.readFromFile(name+'_node')
+    ways = api.readFromFile(name+'_way')
+    concentrationMatrix = poll.receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
     draw.imagePlot(concentrationMatrix,name,bboxSize,radius)
 
 
@@ -78,10 +79,10 @@ def downloadNew():
         None: Downloads and saves a map locally.
     """
     name = conf.sim["current"]
-    fullPath = conf.osm['path']+name+conf.osm['extension']
+    path = conf.osm['path']+name
 
     res = api.getWayFromCoordinates(conf.osm["coordinates"][name])
-    api.writeToFile(fullPath,res)
+    api.writeToCsv(path,res)
 
 
 def normalizeCurrent():

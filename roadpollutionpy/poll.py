@@ -199,37 +199,6 @@ def getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max):
     return bounds
 
 
-# def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
-#     """
-#     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
-
-#     Parameters:
-#         df (Pandas.DataFrame): Map data with nodes and ways.
-#         matrixShape (tuple): a 2 long tuple with row and column count.
-#         lon_min (float): start of the boundingbox as longitude
-#         lon_max (float): end of the boundingbox as longitude
-#         lat_min (float): start of the boundingbox as latitude
-#         lat_max (float): end of the boundingbox as latitude
-        
-#     Returns:
-#         bounds (3D list[x,y,z]): a matrix with a particular size with per cell a list of nodes that belong there.
-#     """
-#     boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
-#     nodesInBounds = []
-#     for rowIndex in range(0, matrixShape[0]):
-#         nodesInBounds.append([]) # Add a new row
-#         row = boundsRange[rowIndex][0][0] 
-#         dfHorRow = df.loc[
-#             (df['lat'] >= row[0]) & 
-#             (df['lat'] < row[1])]
-#         for columIndex in range(0, matrixShape[1]):
-#             nodesInBounds[rowIndex].append([]) # Add a column to the row
-#             nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
-#             nodes.set_index('id')
-#             nodesInBounds[rowIndex][columIndex] = list(nodes.to_dict('records'))
-#     return nodesInBounds
-
-
 def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     """
     Create a 3D frame of a predetermined size with all the nodes in those bounds from a dataframe, with a predetermined shape.
@@ -249,7 +218,7 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
     nodesInBounds = []
     df.sort_values(by=['lat','lon'],inplace=True)
     df.reset_index(inplace=True)
-    print(df.head())
+
     for rowIndex in range(0, matrixShape[0]):
         nodesInBounds.append([]) # Add a new row
         row = boundsRange[rowIndex][0][0]
@@ -263,7 +232,7 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
             # print(minLat,maxLat,boundsRange[rowIndex][columIndex][1])
             # print(x)
             nodesInBounds[rowIndex][columIndex] = x
-    return np.asarray(nodesInBounds)
+    return np.array(nodesInBounds,dtype=object)
 
 
 def boundBasedConcentration(df:pd.DataFrame) -> np.array:
@@ -342,22 +311,23 @@ def getNodesInBoundsFromDf(_df:pd.DataFrame,bounds:list):
     # bounds[0] = [start latitude, end latitude line]
     # bounds[1] = [start longitude, end longitude]
 
-    return _df[(_df['lon'] >= bounds[1][0]) & (_df['lon'] < bounds[1][1])][['id','lat','lon','highway','maxspeed','surface']]
+    return _df[(_df['lon'] >= bounds[1][0]) & (_df['lon'] < bounds[1][1])][['id','lat','lon']]
 
 
-def generateLookup(df:pd.DataFrame):
+def generateLookup(dfWays:pd.DataFrame):
     """
     Creates a lookup table where the key is a nodeId's and as value another dict with the corrosponding waysId's and order number.
 
     Parameters:
-        df (Pandas.DataFrame): Map data with nodes and ways.
+        dfWays (Pandas.DataFrame): Map data with ways.
         
     Returns:
         nodeLookup(dict): A dictionary with all nodeId's as keys and as value another dict with the corrosponding waysId's and order number.
     """
 
     nodeLookup = {}
-    for way in df.loc[df['type'] == 'way'].itertuples():
+    for way in dfWays.itertuples():
+        # input(f'{way.nodes}, {type(way.nodes)}')
         for node in way.nodes:
             if node in nodeLookup:
                 nodeLookup[node].update({way.id:way.nodes.index(node)})
@@ -450,13 +420,15 @@ def generateWayEF(df:pd.DataFrame):
     """
     unhandled = set()
     wayLookup = {}
+
+    df['tags'] = df['tags'].apply(eval)
     
-    for way in df.loc[df['type'] == 'way'].itertuples():
-        _type = str(way.highway)
+    for way in df.itertuples():
+        _type = str(way.tags['highway'])
         if conf.sim['overwriting']['enabled'] and _type in conf.sim['overwriting']['roads_speeds']:
             speed = conf.sim['overwriting']['roads_speeds'][_type]
-        elif(way.maxspeed):
-            speed = int(way.maxspeed)
+        elif(way.tags.get('maxspeed')):
+            speed = int(way.tags['maxspeed'])
         else:
             speed = waytypeToSpeed(_type)
 
@@ -629,7 +601,7 @@ def nodesToAngle(node1, node2):
     return math.degrees(math.atan(diff))
 
 
-def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100) -> np.array:
+def receptorpointBasedConcentration(dfNodes:pd.DataFrame,dfWays:pd.DataFrame,windSpeed:int,windAngle:int,radius:int,bboxSize:int = 100) -> np.array:
     """
     Calculate the concentration based on the receptorpoints, taking in account different regions based on the radius.
 
@@ -655,7 +627,9 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
     total = 0
     downWindFrac = conf.sim['downwind']
 
-    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
+    dfWays['nodes'] = dfWays['nodes'].apply(eval)
+
+    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(dfNodes)
 
     lonInKm = calculateDistanceM(lat_min,lat_min,lon_min,lon_max)
     latInKm = calculateDistanceM(lat_min,lat_max,lon_min,lon_min)
@@ -668,11 +642,14 @@ def receptorpointBasedConcentration(df:pd.DataFrame,windSpeed:int,windAngle:int,
     concentrationMatrix = np.zeros(
         (math.ceil(latInKm/bboxSize),math.ceil(lonInKm/bboxSize))
     )
-    nodeToWays = generateLookup(df)
-    wayIdToInfo = generateWayEF(df)
-    nodesInBounds = getBoundsNodelist(df,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
+    nodeToWays = generateLookup(dfWays) # REFACTOR
+    wayIdToInfo = generateWayEF(dfWays) # REFACTOR
+    nodesInBounds = getBoundsNodelist(dfNodes,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
     latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
     lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
+
+    print(nodeToWays)
+    print("TEST 0")
     if(conf.sim['verbose']):
         print(f'Prep took: {time.time() - startTime}s')
     # depending on the size of the bounds you make the radius has a different impact as multiplier

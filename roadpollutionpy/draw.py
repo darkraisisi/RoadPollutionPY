@@ -12,22 +12,6 @@ else:
     from roadpollutionpy import config as conf
 
 
-def readFromFile(name) -> pd.DataFrame:
-    """
-    Get a Dataframe form json file.
-
-    Parameters:
-        name (str): A string containing the name of the file.
-        
-    Returns:
-        response (Pandas.DataFrame): A dataframe with all the nodes and ways.
-    """
-    if(conf.draw['verbose']):
-        print(conf.draw['path'])
-    df = pd.json_normalize(pd.read_json(conf.draw['path'],typ='series', dtype=object))
-    return df
-
-
 def plot(data:pd.DataFrame, roads:list=None) -> None:
     """
     Draw and show a figure with all the roads in the given dataframe.

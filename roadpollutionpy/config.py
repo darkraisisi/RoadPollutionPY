@@ -10,7 +10,7 @@ osm = {
         "utrechtSur": "52.0415,4.9871,52.1554,5.1958"
     },
     "path": "maps/",
-    "extension": ".json",
+    "extension": ".csv",
     "normalisation":{
         "cols":["type", "id", "lat", "lon", "nodes", "tags.name", "tags.highway", "tags.maxspeed", "tags.surface"],
         "path": "maps/norm/"
