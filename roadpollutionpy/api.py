@@ -7,6 +7,7 @@ import time
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 
 def init():
@@ -35,7 +36,7 @@ def getWayFromCoordinates(coordinates:str) -> str:
     return response
 
 
-def writeToFile(fullPath:str,data:str) -> None:
+def writeToCsv(path:str,data:str) -> None:
     """
     Writes text to a file at a given path.
 
@@ -46,8 +47,17 @@ def writeToFile(fullPath:str,data:str) -> None:
     Returns:
         response (JSON): A json with the nodes and ways requesten in the bounds.
     """
-    with open(fullPath,'w') as outfile:
-        json.dump(data['elements'],outfile)
+    data = pd.DataFrame(data['elements'])
+
+    nodes = data[data['type'] == 'node'][['id','lat','lon','tags']]
+
+    ways = data[data['type'] == 'way'][['id','tags','nodes']]
+    print(ways.head())
+    print(ways.dtypes)
+    # ways['nodes'] = ways['nodes'].apply(np.array)
+
+    nodes.to_csv(path+'_node.csv', index = False, header=True)
+    ways.to_csv(path+'_way.csv', index = False, header=True)
 
 
 def readFromFile(name:str) -> pd.DataFrame:
@@ -60,46 +70,7 @@ def readFromFile(name:str) -> pd.DataFrame:
     Returns:
         response (Pandas.DataFrame): A dataframe with all the nodes and ways.
     """
-    return pd.json_normalize(pd.read_json(conf.osm['path']+name+conf.osm['extension'],typ='series', dtype=object))
-
-
-def normalizeDataframe(_df:pd.DataFrame,cols:list,verbose=False):
-    """
-    Normalizes a Dataframe, deletes unnececary columns and strips prexfixes.
-
-    Parameters:
-        _df (Pandas.DataFrame): a dataframe
-        cols (list[(str)]): A list of column names that need to be kept.
-        verbose (boolean): Flag for turning ong verbosity.
-        
-    Returns:
-        response (JSON): A json with the nodes and ways requesten in the bounds
-    """
-    toRm = []
-    for dfCol in _df.columns: 
-        if(dfCol not in cols):
-            toRm.append(dfCol)
-
-    if verbose:
-        getDataframeTotalSize(_df)
-        startTime = time.time()
-
-    _df.drop(toRm, axis=1, inplace=True)
-    _df.set_index('id')
-    _df = _df.drop_duplicates('id',keep='first')
-
-    toRename = {}
-    for dfCol in _df.columns: 
-        if 'tags.' in dfCol:
-            toRename.update({dfCol:dfCol.replace('tags.','')})
-    _df.rename(columns=toRename,inplace=True)
-
-
-    if verbose:
-        getDataframeTotalSize(_df)
-        print(f'normalizing took {time.time() - startTime} seconds')
-
-    return _df
+    return pd.read_csv(conf.osm['path']+name+conf.osm['extension'])
 
 
 def getDataframeTotalSize(df:pd.DataFrame) -> int:
@@ -116,16 +87,4 @@ def getDataframeTotalSize(df:pd.DataFrame) -> int:
     for i in df.memory_usage(index=True,deep=True): 
         size+=i
     print(size)
-
-
-def dataframeToFile(df:pd.DataFrame,fullPath:str) -> None:
-    """
-    writes a dataframe to a file.
-
-    Parameters:
-        df (Pandas.DataFrame): a dataframe that you want to write away.
-        fullPath (str): A string containing the full path where the file needs to be written including the filename and extension.
-        
-    """
-    df.to_json(fullPath,orient='records')
 

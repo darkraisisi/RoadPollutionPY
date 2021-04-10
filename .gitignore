@@ -2,9 +2,12 @@
 # Byte-compiled / optimized / DLL files
 maps/*.json
 maps/norm/*.json
+maps/*.csv
+maps/norm/*.csv
 __pycache__/
 *.py[cod]
 *$py.class
+.vscode
 
 # C extensions
 *.so
@@ -132,5 +135,5 @@ dmypy.json
 .pyre/
 
 # Ide Stuff
-.vscode/
+.vscode/*.json
 .idea.
