@@ -2,7 +2,7 @@
 osm = {
     "url": "https://overpass-api.de/",
     "api": "api/",
-    "coordinates" : { # Boundingbox region
+    "coordinates": {  # Boundingbox region
         # bottom,left,top,right
         "baarn": "52.1983,5.2588,52.2221,5.3098",
         "baarnPlus": "52.1983,5.2488,52.2271,5.3098",
@@ -11,8 +11,8 @@ osm = {
     },
     "path": "maps/",
     "extension": ".json",
-    "normalisation":{
-        "cols":["type", "id", "lat", "lon", "nodes", "tags.name", "tags.highway", "tags.maxspeed", "tags.surface"],
+    "normalisation": {
+        "cols": ["type", "id", "lat", "lon", "nodes", "tags.name", "tags.highway", "tags.maxspeed", "tags.surface"],
         "path": "maps/norm/"
     }
 }
@@ -21,12 +21,12 @@ osm = {
 sim = {
     "current": "baarn",
     "verbose": False,
-    "bbox_size": 50, # Meters.
-    "radius": 300, # Meters.
-    "actual_wind_angle": 50, # Actual windAngle 0-360.
+    "bbox_size": 50,  # Meters.
+    "radius": 300,  # Meters.
+    "actual_wind_angle": 50,  # Actual windAngle 0-360.
     "relative_wind_angle": 0,
-    "wind_speed": 3, # Meters/second.
-    "downwind": 0.25, # Hardcoded fraction, part of the road that is down wind from the receptor point.
+    "wind_speed": 3,  # Meters/second.
+    "downwind": 0.25,  # Hardcoded fraction, part of the road that is down wind from the receptor point.
     "roads": {
         "speeds": {
             "service": 30,
@@ -46,9 +46,9 @@ sim = {
             "unclassified": 30
         }
     },
-    "overwriting": { # Options for overwriting metadata to see the effect of changing the speed on pollution 
+    "overwriting": {  # Options for overwriting metadata to see the effect of changing the speed on pollution.
         "enabled": False,
-        "roads_speeds":{
+        "roads_speeds": {
             "motorway": 130,
             "residential": 15
         }
@@ -56,11 +56,12 @@ sim = {
 }
 
 # Drawing related settings.
-draw = { 
+draw = {
     "verbose": False,
-    "roads": None, # List of roadTypeNames to draw.
-    "path":osm["normalisation"]["path"]+sim["current"]+osm["extension"]
+    "roads": None,  # List of roadTypeNames to draw.
+    "path": osm["normalisation"]["path"]+sim["current"]+osm["extension"]
 }
+
 
 def calcWindAngle(act):
     # 0-180
@@ -69,7 +70,9 @@ def calcWindAngle(act):
     elif (act >= 180 and act < 360):
         return act - 270
 
+
 def init():
-    sim.update({"relative_wind_angle":calcWindAngle(sim["actual_wind_angle"])})
+    sim.update({"relative_wind_angle": calcWindAngle(sim["actual_wind_angle"])})
+
 
 init()
