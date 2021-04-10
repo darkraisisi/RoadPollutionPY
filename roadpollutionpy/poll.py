@@ -287,7 +287,7 @@ def boundBasedConcentration(df:pd.DataFrame) -> np.array:
 
                 # print(f'Amount of bounds calculated:{i}')
                 i+=1
-    print('J:',j)
+    # print('J:',j)
     print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
     return matrix
 
@@ -642,8 +642,8 @@ def receptorpointBasedConcentration(dfNodes:pd.DataFrame,dfWays:pd.DataFrame,win
     latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
     lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
 
-    print(nodeToWays)
-    print("TEST 0")
+    # print(nodeToWays)
+    # print("TEST 0")
     if(conf.sim['verbose']):
         print(f'Prep took: {time.time() - startTime}s')
     # depending on the size of the bounds you make the radius has a different impact as multiplier

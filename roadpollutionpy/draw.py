@@ -69,7 +69,7 @@ def imagePlot(matrix, name, bboxSize, radius):
     plt.show()
 
 
-def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=None):
+def concentrationAndRoads(concentrationMatrix, dfNodes: pd.DataFrame, dfWays: pd.DataFrame, roads:list=None):
     """
     Draw and show an figure with the values of a concentration matrix and all roads overlayed.
 
@@ -77,14 +77,14 @@ def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=Non
         matrix (list[list[]]): a 2 dimensional matrix with numerical values in the cells.
         data (Pandas.DataFrame): A dataframe containing a map with nodes and ways.
         roads (list[str]): a list of roads that you want to draw, none suggests you want to draw all is default.
-        
+
     Returns:
         None: Shows a figure
     """
     # This function is an attempt to add both plots in one figure
     fig = plt.figure()
-    concentrationFig = fig.add_subplot(111,label='concentration')
-    wayFig = fig.add_subplot(111,label='roads', frame_on=False)
+    concentrationFig = fig.add_subplot(111, label='concentration')
+    wayFig = fig.add_subplot(111, label='roads', frame_on=False)
     concentrationFig.imshow(concentrationMatrix, cmap='hot', interpolation='quadric')
     concentrationFig.set_xlabel('boundCol', color='red')
     concentrationFig.set_ylabel('boundRow', color='red')
@@ -92,14 +92,14 @@ def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=Non
     concentrationFig.tick_params(axis='y', colors="red")
 
     if(roads):
-        for node in data.loc[(data['highway'].isin(roads))].itertuples():
-            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+        for node in dfWays.loc[(dfWays['highway'].isin(roads))].itertuples():
+            out = dfNodes.iloc[(pd.Index(dfNodes['id']).get_indexer(node.nodes))]
             wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
     else:
         # Go through all ways
-        for node in data.loc[(data['type'] == 'way')].itertuples():
+        for node in dfWays.itertuples():
             # Get the current way and look at the nodes that mare the road and get a list returned based on the id's
-            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+            out = dfNodes.iloc[(pd.Index(dfNodes['id']).get_indexer(node.nodes))]
             # plot the two lists of longitude and latitude lines
             wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
 

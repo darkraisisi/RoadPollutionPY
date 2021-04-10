@@ -29,8 +29,8 @@ def simulateCurrentConcentration():
 
     nodes = api.readFromFile(name+'_node')
     ways = api.readFromFile(name+'_way')
-    concentrationMatrix = poll.receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
-    draw.imagePlot(concentrationMatrix,name,bboxSize,radius)
+    concentrationMatrix = poll.receptorpointBasedConcentration(nodes, ways, windSpeed, windAngle, radius, bboxSize)
+    draw.imagePlot(concentrationMatrix, name, bboxSize, radius)
 
 
 def simulateCurrentConcentrationAndRoads():
@@ -57,9 +57,10 @@ def simulateCurrentConcentrationAndRoads():
     radius = conf.sim["radius"]
     roads = conf.draw["roads"]
 
-    mapData = draw.readFromFile(name)
-    concentrationMatrix = poll.receptorpointBasedConcentration(mapData, windSpeed, windAngle, radius, bboxSize)
-    draw.concentrationAndRoads(concentrationMatrix, mapData, roads)
+    nodes = api.readFromFile(name+'_node')
+    ways = api.readFromFile(name+'_way')
+    concentrationMatrix = poll.receptorpointBasedConcentration(nodes, ways, windSpeed, windAngle, radius, bboxSize)
+    draw.concentrationAndRoads(concentrationMatrix, nodes, ways, roads)
 
 
 def downloadNormalizeNew():
