@@ -13,7 +13,8 @@ if (__name__ == 'poll'):
 else:
     from roadpollutionpy import config as conf
     from roadpollutionpy import draw
-    from roadpollutionpy import algorithm as algo 
+    from roadpollutionpy import algorithm as algo
+    from roadpollutionpy import api
 
 
 """
@@ -39,6 +40,68 @@ E: Emissions in units, A: Activity rate in unit distance, EF: Emission Factor in
 European source of emission factors for NOx and generalisation for car dispersion.
 https://www.eea.europa.eu/publications/EMEPCORINAIR5/page016.html
 """
+
+
+def boundBasedConcentration(df:pd.DataFrame) -> np.array:
+    """
+    Calculate the concentration based on a boundingbox system, with a receptor point in the center of each boundingbox.
+    WARNING: the function has a static concentration of 10.
+
+    Parameters:
+        df (Pandas.DataFrame): Map data with nodes and ways.
+        
+    Returns:
+        concentrationMatrix (list): a matrix with at each cell a particular concentration.
+    """
+    startTime = time.time()
+    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
+
+    print(lat_min,lat_min,lon_min,lon_max)
+
+    lonInKm = calculateDistanceKm(lat_min,lat_min,lon_min,lon_max)
+    latInKm = calculateDistanceKm(lat_min,lat_max,lon_min,lon_min)
+
+    matrix = np.zeros(
+    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
+    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
+
+    bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
+    # print(getNodesInBoundsFromDf(df,bounds[4][7]))
+    nodeToWays = generateLookup(df)
+    nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
+    i = 0
+    j=0
+    # go through the different bounds
+    for rowIndex in range(0, len(bounds)):
+        for columIndex in range(0, len(bounds[rowIndex])):
+            centerLat, centerLon = ((bounds[rowIndex][columIndex][0][0] + bounds[rowIndex][columIndex][0][1]) / 2) , ((bounds[rowIndex][columIndex][1][0] + bounds[rowIndex][columIndex][1][1]) / 2)
+            # get all the nodes that are in the current bound
+            nodesInBound = nodesInBounds[rowIndex][columIndex]
+            # get all the wayNodes that have one more nodes that are in the current bound
+            currentWaysId = {}
+            if len(nodesInBound) > 0:
+                for nodeInBound in nodesInBound:
+                    for wayId in nodeToWays[nodeInBound['id']]:
+                        if wayId in currentWaysId:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
+                        else:
+                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
+                            currentWaysId[wayId] = [nodeInBound]
+
+                for currWayId in currentWaysId:
+                    for wayIndex in range(0,len(currentWaysId[currWayId])-1):
+                        j+=1
+                        currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
+                        lineLength = calculateDistanceKm(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
+                        ret = algo.concentration(10,conf.sim['wind_speed'],centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],conf.sim['relative_wind_angle'],(lineLength/4))
+                        matrix[rowIndex][columIndex] += ret
+
+                # print(f'Amount of bounds calculated:{i}')
+                i+=1
+    print('J:',j)
+    print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
+    return matrix
 
 
 def emissionfactorToEmission(distance, EF):
@@ -215,9 +278,10 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
         bounds (3D list[x,y,z]): a matrix with a particular size with per cell a list of nodes that belong there.
     """
     boundsRange = getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max)
+    print(boundsRange, boundsRange.shape)
     nodesInBounds = []
-    df.sort_values(by=['lat','lon'],inplace=True)
-    df.reset_index(inplace=True)
+    df.sort_values(by=['lat','lon'],inplace=True) # WIP
+    df.reset_index(inplace=True) # WIP
 
     for rowIndex in range(0, matrixShape[0]):
         nodesInBounds.append([]) # Add a new row
@@ -225,6 +289,8 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
         minLat = df.index[df['lat'] >= row[0]].min()
         maxLat = df.index[df['lat'] < row[1]].max()
         dfHorRow = df.iloc[minLat-1:maxLat+1]
+        # df.drop(list(range(minLat, maxLat+1))) makes it slower
+
         for columIndex in range(0, matrixShape[1]):
             nodesInBounds[rowIndex].append([]) # Add a column to the row
             nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
@@ -232,78 +298,17 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
             # print(minLat,maxLat,boundsRange[rowIndex][columIndex][1])
             # print(x)
             nodesInBounds[rowIndex][columIndex] = x
+            
     return np.array(nodesInBounds,dtype=object)
-
-
-def boundBasedConcentration(df:pd.DataFrame) -> np.array:
-    """
-    Calculate the concentration based on a boundingbox system, with a receptor point in the center of each boundingbox.
-    WARNING: the function has a static concentration of 10.
-
-    Parameters:
-        df (Pandas.DataFrame): Map data with nodes and ways.
-        
-    Returns:
-        concentrationMatrix (list): a matrix with at each cell a particular concentration.
-    """
-    startTime = time.time()
-    lon_min, lon_max, lat_min ,lat_max = getMinMaxDataframe(df)
-
-    print(lat_min,lat_min,lon_min,lon_max)
-
-    lonInKm = calculateDistanceKm(lat_min,lat_min,lon_min,lon_max)
-    latInKm = calculateDistanceKm(lat_min,lat_max,lon_min,lon_min)
-
-    matrix = np.zeros(
-    (math.ceil( (((lat_max - lat_min)*1000)/latInKm)*6),
-    math.ceil( (((lon_max - lon_min)*1000)/lonInKm)*6 )))
-
-    bounds = getBoundsRanges(matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    # print(getNodesInBoundsFromDf(df,bounds[4][7]))
-    nodeToWays = generateLookup(df)
-    nodesInBounds = getBoundsNodelist(df,matrix.shape,lon_min,lon_max,lat_min,lat_max)
-    i = 0
-    j=0
-    # go through the different bounds
-    for rowIndex in range(0, len(bounds)):
-        for columIndex in range(0, len(bounds[rowIndex])):
-            centerLat, centerLon = ((bounds[rowIndex][columIndex][0][0] + bounds[rowIndex][columIndex][0][1]) / 2) , ((bounds[rowIndex][columIndex][1][0] + bounds[rowIndex][columIndex][1][1]) / 2)
-            # get all the nodes that are in the current bound
-            nodesInBound = nodesInBounds[rowIndex][columIndex]
-            # get all the wayNodes that have one more nodes that are in the current bound
-            currentWaysId = {}
-            if len(nodesInBound) > 0:
-                for nodeInBound in nodesInBound:
-                    for wayId in nodeToWays[nodeInBound['id']]:
-                        if wayId in currentWaysId:
-                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
-                            currentWaysId[wayId].insert(nodeInBound['order'],nodeInBound)
-                        else:
-                            nodeInBound.update({'order':nodeToWays[nodeInBound['id']][wayId]})
-                            currentWaysId[wayId] = [nodeInBound]
-
-                for currWayId in currentWaysId:
-                    for wayIndex in range(0,len(currentWaysId[currWayId])-1):
-                        j+=1
-                        currNode, nextNode = currentWaysId[currWayId][wayIndex] ,  currentWaysId[currWayId][wayIndex+1]
-                        lineLength = calculateDistanceKm(float(currNode['lat']),float(nextNode['lat']),float(currNode['lon']),float(nextNode['lon']))
-                        ret = algo.concentration(10,conf.sim['wind_speed'],centerLon,centerLat,currNode['lon'],currNode['lat'],nextNode['lon'],nextNode['lat'],conf.sim['relative_wind_angle'],(lineLength/4))
-                        matrix[rowIndex][columIndex] += ret
-
-                # print(f'Amount of bounds calculated:{i}')
-                i+=1
-    print('J:',j)
-    print(f'1 cycle of calculations took {time.time() - startTime} seconds.')
-    return matrix
 
 
 def getNodesInBoundsFromDf(_df:pd.DataFrame,bounds:list):
     """
-    Search for all the nodes that belong between a 4 bounding lines.
+    Search for all the nodes that belong between 4 bounding lines.
 
     Parameters:
         df (Pandas.DataFrame): Map data with nodes and ways.
-        bounds (list): 2 rows with each 2 values, row1 latitudes, row2 longitudes.
+        bounds (list): 2 rows with each 2 values, row1 latitudes(min-max), row2 longitudes(min-max).
         
     Returns:
         nodesInBound(Series): A series object with all the nodes an their atributes.
@@ -338,7 +343,7 @@ def generateLookup(dfWays:pd.DataFrame):
 
 def waytypeToSpeed(roadTypeName:str):
     """
-    A fallback function to determing typical speeds for roads that have no meta-data.
+    A fallback function to determine typical speeds for roads that have no meta-data.
 
     Parameters:
         roadTypeName (str): The type of road, usually specified under the tags.highway/highway column.
@@ -514,7 +519,7 @@ def getNodesInBoundsByIndex(nodesInBounds,coords):
     """
     rows = coords[:,0]
     cols = coords[:,1]
-    return nodesInBounds[[rows,cols]]
+    return nodesInBounds[[rows,cols]] # REFACTOR
 
 
 def generateCirleCoordsList(r,start:tuple):
@@ -642,16 +647,19 @@ def receptorpointBasedConcentration(dfNodes:pd.DataFrame,dfWays:pd.DataFrame,win
     concentrationMatrix = np.zeros(
         (math.ceil(latInKm/bboxSize),math.ceil(lonInKm/bboxSize))
     )
-    nodeToWays = generateLookup(dfWays) # REFACTOR
-    wayIdToInfo = generateWayEF(dfWays) # REFACTOR
+    nodeToWays = generateLookup(dfWays) # REFACTOR (still fast)
+    wayIdToInfo = generateWayEF(dfWays) # REFACTOR (still fast)
+
+    # REFACTOR this slow mess vv
+    print(concentrationMatrix.shape)
     nodesInBounds = getBoundsNodelist(dfNodes,concentrationMatrix.shape,lon_min,lon_max,lat_min,lat_max)
     latFreq = ((lat_max - lat_min) / concentrationMatrix.shape[0])
     lonFreq = ((lon_max - lon_min) / concentrationMatrix.shape[1])
 
-    print(nodeToWays)
-    print("TEST 0")
     if(conf.sim['verbose']):
         print(f'Prep took: {time.time() - startTime}s')
+    # return None
+    
     # depending on the size of the bounds you make the radius has a different impact as multiplier
     for rowIndex in range(0, len(concentrationMatrix)):
         centerLat = lat_max - (latFreq * rowIndex)
@@ -688,3 +696,15 @@ def receptorpointBasedConcentration(dfNodes:pd.DataFrame,dfWays:pd.DataFrame,win
         print(f'Full setup and 1 cycle of concentration took: {time.time() - startTime}s')
     return concentrationMatrix
 
+if __name__ == "__main__":
+    name = conf.sim["current"]
+    
+    windSpeed = conf.sim["wind_speed"]
+    windAngle = conf.sim["relative_wind_angle"]
+    bboxSize = conf.sim["bbox_size"]
+    radius = conf.sim["radius"]
+
+    nodes = api.readFromFile(name+'_node')
+    ways = api.readFromFile(name+'_way')
+    concentrationMatrix = receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
+    draw.imagePlot(concentrationMatrix,name,bboxSize,radius)

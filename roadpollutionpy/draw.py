@@ -69,7 +69,7 @@ def imagePlot(matrix, name, bboxSize, radius):
     plt.show()
 
 
-def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=None):
+def concentrationAndRoads(concentrationMatrix, nodes:pd.DataFrame, ways:pd.DataFrame, roads:list=None):
     """
     Draw and show an figure with the values of a concentration matrix and all roads overlayed.
 
@@ -81,6 +81,8 @@ def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=Non
     Returns:
         None: Shows a figure
     """
+    print(nodes.columns)
+    print(ways.columns)
     # This function is an attempt to add both plots in one figure
     fig = plt.figure()
     concentrationFig = fig.add_subplot(111,label='concentration')
@@ -91,16 +93,18 @@ def concentrationAndRoads(concentrationMatrix, data:pd.DataFrame, roads:list=Non
     concentrationFig.tick_params(axis='x', colors="red")
     concentrationFig.tick_params(axis='y', colors="red")
 
-    if(roads):
-        for node in data.loc[(data['highway'].isin(roads))].itertuples():
-            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
-            wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
+    if(False):
+        print('test')
+    # if(roads):
+        # for node in nodes.loc[(data['highway'].isin(roads))].itertuples():
+        #     out = ways.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
+        #     wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
     else:
         # Go through all ways
-        for node in data.loc[(data['type'] == 'way')].itertuples():
+        for way in ways.itertuples():
             # Get the current way and look at the nodes that mare the road and get a list returned based on the id's
-            out = data.iloc[(pd.Index(data['id']).get_indexer(node.nodes))]
-            # plot the two lists of longitude and latitude lines
+            out = ways.iloc[(pd.Index(ways['id']).get_indexer(way.nodes))]
+            # # plot the two lists of longitude and latitude lines
             wayFig.plot(out.lon,out.lat,color='green', alpha=0.4)
 
     wayFig.set_xlabel('longitude', color='green')

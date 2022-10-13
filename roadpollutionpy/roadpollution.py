@@ -55,15 +55,10 @@ def simulateCurrentConcentrationAndRoads():
     radius = conf.sim["radius"]
     roads = conf.draw["roads"]
 
-    mapData = draw.readFromFile(name)
-    concentrationMatrix = poll.receptorpointBasedConcentration(mapData,windSpeed,windAngle,radius,bboxSize)
-    draw.concentrationAndRoads(concentrationMatrix,mapData,roads)
-
-
-def downloadNormalizeNew():
-    downloadNew()
-    normalizeCurrent()
-
+    nodes = api.readFromFile(name+'_node')
+    ways = api.readFromFile(name+'_way')
+    concentrationMatrix = poll.receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
+    draw.concentrationAndRoads(concentrationMatrix,nodes,ways,roads)
 
 
 def downloadNew():
@@ -85,33 +80,10 @@ def downloadNew():
     api.writeToCsv(path,res)
 
 
-def normalizeCurrent():
-    """
-    Normalize a currently saved map.
-
-    Parameters:
-        name (str): conf.sim["current"], name of your file.
-        path (str): conf.osm['normalisation']['path']+name+conf.osm['extension'], path where you want to save your normalized file.
-        collums (int): conf.osm['normalisation']['cols'], Columns to keep.
-        
-    Returns:
-        None: Downloads and saves a map locally.
-    """
-    name = conf.sim["current"]
-    fullPath = conf.osm['normalisation']['path']+name+conf.osm['extension']
-
-    mapData = api.readFromFile(name)
-    normDf = api.normalizeDataframe(mapData,conf.osm['normalisation']['cols'],True)
-    api.dataframeToFile(normDf,fullPath)
-
-
-
 inputToFunction = {
     "1": simulateCurrentConcentration,
     "2": simulateCurrentConcentrationAndRoads,
-    "3": downloadNormalizeNew,
-    "4": downloadNew,
-    "5": normalizeCurrent,
+    "3": downloadNew,
     "quit": quit
 }
 
@@ -122,9 +94,7 @@ if __name__ == "__main__":
             input("\nwhich function would you like to perform?\n\n"+
             "1: Simulate current, radial bounds, concentration map\n"+
             "2: Simulate current, radial bounds, concentration map & roads\n"+
-            "3: Download & normalize new map by current name \n"+
-            "4: Download new map by current name \n"+
-            "5: Normalize map by current name \n"+
+            "3: Download new map by current name \n"+
             "quit\n"))
             
             inputToFunction[selection]()
