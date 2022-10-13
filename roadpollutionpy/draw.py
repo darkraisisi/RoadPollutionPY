@@ -77,7 +77,7 @@ def concentrationAndRoads(concentrationMatrix, nodes:pd.DataFrame, ways:pd.DataF
         matrix (list[list[]]): a 2 dimensional matrix with numerical values in the cells.
         data (Pandas.DataFrame): A dataframe containing a map with nodes and ways.
         roads (list[str]): a list of roads that you want to draw, none suggests you want to draw all is default.
-        
+
     Returns:
         None: Shows a figure
     """
@@ -85,8 +85,8 @@ def concentrationAndRoads(concentrationMatrix, nodes:pd.DataFrame, ways:pd.DataF
     print(ways.columns)
     # This function is an attempt to add both plots in one figure
     fig = plt.figure()
-    concentrationFig = fig.add_subplot(111,label='concentration')
-    wayFig = fig.add_subplot(111,label='roads', frame_on=False)
+    concentrationFig = fig.add_subplot(111, label='concentration')
+    wayFig = fig.add_subplot(111, label='roads', frame_on=False)
     concentrationFig.imshow(concentrationMatrix, cmap='hot', interpolation='quadric')
     concentrationFig.set_xlabel('boundCol', color='red')
     concentrationFig.set_ylabel('boundRow', color='red')

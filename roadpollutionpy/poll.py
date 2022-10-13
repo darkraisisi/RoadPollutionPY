@@ -18,19 +18,19 @@ else:
 
 
 """
-Distance between longitude and latitude lines
+Distance between longitude and latitude lines.
 Source: https://stackoverflow.com/a/21623206/7271827
 """
 
 """
-Creating a realistic circle out of squares
+Creating a realistic circle out of squares.
 https://en.wikipedia.org/wiki/Midpoint_circle_algorithm
 Source for code function generateCirleCoordsList:
 https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/ by Nabaneet Roy & Tuhina Singh Improved and alterd by David Demmers
 """
 
 """
-Using the emission factor to calculate actual emission
+Using the emission factor to calculate actual emission.
 https://www.sciencedirect.com/topics/engineering/emission-factor 5.7
 E = A * EF 
 E: Emissions in units, A: Activity rate in unit distance, EF: Emission Factor in unit per pollutant
@@ -106,12 +106,12 @@ def boundBasedConcentration(df:pd.DataFrame) -> np.array:
 
 def emissionfactorToEmission(distance, EF):
     """
-    Calculates the emmissions per unit length
+    Calculates the emmissions per unit length.
 
     Parameters:
-        distance (int): A string of coordinates split by a space, order from bottom,left,top,right.
+        distance (int): A string of coordinates split by a space, order from bottom, left, top, right.
         EF (int): emission factor, a factor to determine the emissions this time represented as grams per distance (kilometer)
-        
+
     Returns:
         emissions (int): The emissions per unit length.
     """
@@ -120,22 +120,22 @@ def emissionfactorToEmission(distance, EF):
 
 def emissionfactorToReducedEmission(distance, EF, ER):
     """
-    Calculates the emmissions per unit length
+    Calculates the emmissions per unit length.
 
     Parameters:
-        distance (int): A string of coordinates split by a space, order from bottom,left,top,right.
+        distance (int): A string of coordinates split by a space, order from bottom, left, top, right.
         EF (int): emission factor, a factor to determine the emissions this time represented as grams per distance (kilometer).
         ER (int): emission reduction factor.
-        
+
     Returns:
         emissions (int): The emissions per unit length after emission reduction.
     """
-    return emissionfactorToEmission(distance,EF)*(1-ER/100)
+    return emissionfactorToEmission(distance, EF)*(1-ER/100)
 
 
-def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
+def showWindAngleImpact(Q, U, Xr, Yr, X1, Y1, X2, Y2):
     """
-    Shows the imact wind angles have
+    Shows the imact wind angles have.
 
     Parameters:
         Q (int): The amount of mass per unit length in time
@@ -146,12 +146,10 @@ def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
         Y1 (int): Start of the line source Y coordinate
         X2 (int): End of the line source X coordinate
         Y2 (int): End of the line source Y coordinate
-        
+
     Returns:
         None: Shows a figure of the impact of the wind angle.
-    """
 
-    """
     Q = 10
     U = 3 # 3 m/s average wind speed
     theta = 40 # 
@@ -164,11 +162,11 @@ def showWindAngleImpact(Q,U,Xr,Yr,X1,Y1,X2,Y2):
     """
     x = []
     y = []
-    for i in range(-89,90,1):
+    for i in range(-89, 90, 1):
         # print(i)
         # print(algo.concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,math.radians(i)))
         x.append(i)
-        y.append(algo.concentration(Q,U,Xr,Yr,X1,Y1,X2,Y2,math.radians(i),0))
+        y.append(algo.concentration(Q, U, Xr, Yr, X1, Y1, X2, Y2, math.radians(i), 0))
 
     plt.plot(x,y)
     plt.show()
@@ -201,7 +199,7 @@ def calculateDistanceM(lat1, lat2, lon1, lon2):
         lat2 (float): latitude line of the second point.
         lon1 (float): longitude line of the fist point.
         lon2 (float): longitude line of the second point.
-        
+
     Returns:
         distance (int): The distance between the two points in meters.
     """
@@ -212,23 +210,23 @@ def calculateDistanceM(lat1, lat2, lon1, lon2):
     return 12742000 * math.asin(math.sqrt(a))
 
 
-def getMinMaxDataframe(df:pd.DataFrame) -> tuple:
+def getMinMaxDataframe(df: pd.DataFrame) -> tuple:
     """
     Get the outer values of longitude and latitude form a dataframe.
 
     Parameters:
         df (Pandas.DataFrame): Map data with nodes and ways.
-        
+
     Returns:
         outer (tuple): min longitude, max longitude, min latitude, max latitude.
     """
     return (min(df['lon']),
-    max(df['lon']),
-    min(df['lat']),
-    max(df['lat']))
-    
+            max(df['lon']),
+            min(df['lat']),
+            max(df['lat']))
 
-def getBoundsRanges(matrixShape,lon_min,lon_max,lat_min,lat_max):
+
+def getBoundsRanges(matrixShape, lon_min, lon_max, lat_min, lat_max):
     """
     Create a 2D frame of a predetermined size with longitude & latitude bounds as values.
 
@@ -293,10 +291,8 @@ def getBoundsNodelist(df,matrixShape,lon_min,lon_max,lat_min,lat_max):
 
         for columIndex in range(0, matrixShape[1]):
             nodesInBounds[rowIndex].append([]) # Add a column to the row
-            nodes = getNodesInBoundsFromDf(dfHorRow,boundsRange[rowIndex][columIndex])
+            nodes = getNodesInBoundsFromDf(dfHorRow, boundsRange[rowIndex][columIndex])
             x = list(nodes.to_dict('records'))
-            # print(minLat,maxLat,boundsRange[rowIndex][columIndex][1])
-            # print(x)
             nodesInBounds[rowIndex][columIndex] = x
             
     return np.array(nodesInBounds,dtype=object)
@@ -627,7 +623,6 @@ def receptorpointBasedConcentration(dfNodes:pd.DataFrame,dfWays:pd.DataFrame,win
         centerLat, (float(currNode['lat'])+float(nextNode['lat']))/2,
         centerLon,(float(currNode['lon'])+float(nextNode['lon']))/2)
     """
-
     startTime = time.time()
     total = 0
     downWindFrac = conf.sim['downwind']

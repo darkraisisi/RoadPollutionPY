@@ -6,8 +6,9 @@ import poll
 
 def simulateCurrentConcentration():
     """
+    Will show just the concentration.
+
     Prepare and run all the steps requird to do a simulation, dictated by the set config variables.
-    Shows just the concentration.
 
     Parameters:
         name (str): conf.sim["current"], name of your file.
@@ -15,12 +16,12 @@ def simulateCurrentConcentration():
         windAngle (int): conf.sim["relative_wind_angle"], relative windangle from -89 to 90.
         bboxSize (int): conf.sim["bbox_size"], Bounding box size in unit length.
         radius (int): conf.sim["radius"], radius aroung a receptor in unit length.
-        
+
     Returns:
         None: Shows the user a figure of concentration.
     """
     name = conf.sim["current"]
-    
+
     windSpeed = conf.sim["wind_speed"]
     windAngle = conf.sim["relative_wind_angle"]
     bboxSize = conf.sim["bbox_size"]
@@ -28,14 +29,15 @@ def simulateCurrentConcentration():
 
     nodes = api.readFromFile(name+'_node')
     ways = api.readFromFile(name+'_way')
-    concentrationMatrix = poll.receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
-    draw.imagePlot(concentrationMatrix,name,bboxSize,radius)
+    concentrationMatrix = poll.receptorpointBasedConcentration(nodes, ways, windSpeed, windAngle, radius, bboxSize)
+    draw.imagePlot(concentrationMatrix, name, bboxSize, radius)
 
 
 def simulateCurrentConcentrationAndRoads():
     """
+    Will show the concentration and an overlay of roads.
+
     Prepare and run all the steps requird to do a simulation, dictated by the set config variables.
-    Shows the concentration and an overlay of roads.
 
     Parameters:
         name (str): conf.sim["current"], name of your file.
@@ -43,12 +45,12 @@ def simulateCurrentConcentrationAndRoads():
         windAngle (int): conf.sim["relative_wind_angle"], relative windangle from -89 to 90.
         bboxSize (int): conf.sim["bbox_size"], Bounding box size in unit length.
         radius (int): conf.sim["radius"], radius aroung a receptor in unit length.
-        
+
     Returns:
         None: Shows the user a figure of concentration and an overlay of roads.
     """
     name = conf.sim["current"]
-    
+
     windSpeed = conf.sim["wind_speed"]
     windAngle = conf.sim["relative_wind_angle"]
     bboxSize = conf.sim["bbox_size"]
@@ -59,7 +61,6 @@ def simulateCurrentConcentrationAndRoads():
     ways = api.readFromFile(name+'_way')
     concentrationMatrix = poll.receptorpointBasedConcentration(nodes,ways,windSpeed,windAngle,radius,bboxSize)
     draw.concentrationAndRoads(concentrationMatrix,nodes,ways,roads)
-
 
 def downloadNew():
     """
@@ -101,4 +102,3 @@ if __name__ == "__main__":
 
         except Exception as x:
             print(f"An error occured.\n{x} ")
-
